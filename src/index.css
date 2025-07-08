@@ -1,23 +1,14 @@
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background-image: url('https://i.imgur.com/zh3SwPw.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background: #f7f7fa;
   position: relative;
+  overflow-x: hidden;
 }
 
 body::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(252, 252, 252, 0.616); /* Opacité blanche, modifiez si besoin */
-  pointer-events: none;
-  z-index: 0;
+  display: none !important;
 }
 
 main, #root, .app {

@@ -1,14 +1,10 @@
-import React, { useEffect, useState } from "react";
 
-export default function ClassementRegionalEast() {
-  const [tablesEast, setTablesEast] = useState([]);
+import React, { useState } from "react";
+
+// ClassementRegionalEast is now a pure component that receives tablesEast as a prop
+export default function ClassementRegionalEast({ tablesEast = [] }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
-
-  useEffect(() => {
-    const savedE = localStorage.getItem('resultatsData_regionalEast');
-    setTablesEast(savedE ? JSON.parse(savedE) : []);
-  }, []);
 
   const getMatchsForTeam = (team) => {
     const matchs = [];

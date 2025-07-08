@@ -1,9 +1,18 @@
-import React, { useRef, useEffect } from 'react';
+
+// Fiche : composant d'affichage de la fiche de match avec export PDF
+import React, { useRef, useEffect, useContext } from 'react';
 import html2pdf from 'html2pdf.js';
+import { ResultatsContext } from '../contexts/ResultatsContext';
 
+
+// Composant principal de la fiche de match
 export default function Fiche({ match, onClose }) {
+  // Référence pour l'impression/export PDF
   const ficheRef = useRef();
+  // Accès au contexte global des résultats (toutes les tables de matchs)
+  const { tables } = useContext(ResultatsContext);
 
+  // Ajoute un style spécial pour l'impression PDF (cache tout sauf la fiche)
   useEffect(() => {
     const style = document.createElement('style');
     style.media = 'print';
@@ -27,6 +36,7 @@ export default function Fiche({ match, onClose }) {
     return () => document.head.removeChild(style);
   }, []);
 
+  // Fonction pour exporter la fiche en PDF
   const handleExportPDF = () => {
     const element = ficheRef.current;
     const opt = {
@@ -39,32 +49,59 @@ export default function Fiche({ match, onClose }) {
     html2pdf().from(element).set(opt).save();
   };
 
-  const renderJoueurs = (joueurs) => (
-    <table style={styles.joueurTable}>
+  // (Non utilisé dans l'affichage direct, mais exemple de calcul global des essais par joueur)
+  // const scorerCounts = React.useMemo(() => {
+  //   ...
+  // }, [tables]);
+
+  // Affiche le tableau des joueurs d'une équipe avec le nombre d'essais marqués dans CE match
+  const renderJoueurs = (joueurs, team) => (
+    <table style={{ ...styles.joueurTable, width: '80%', fontSize: '1em', margin: '8px auto 16px auto' }}>
       <thead>
         <tr>
-          <th style={styles.joueurCell}>N°</th>
-          <th style={styles.joueurCell}>Nom</th>
-          <th style={styles.joueurCell}>Prénom</th>
+          <th style={{ ...styles.joueurCell, padding: '6px 8px', fontSize: '1em' }}>N°</th>
+          <th style={{ ...styles.joueurCell, padding: '6px 8px', fontSize: '1em' }}>Nom</th>
+          <th style={{ ...styles.joueurCell, padding: '6px 8px', fontSize: '1em' }}>Prénom</th>
+          <th style={{ ...styles.joueurCell, padding: '6px 8px', fontSize: '1em' }}>Essais</th>
         </tr>
       </thead>
       <tbody>
-        {joueurs.map((j, i) => (
-          <tr key={i}>
-            <td style={styles.joueurCell}>{j.numero}</td>
-            <td style={styles.joueurCell}>{j.nom}</td>
-            <td style={styles.joueurCell}>{j.prenom}</td>
-          </tr>
-        ))}
+        {joueurs.map((j, i) => {
+          // Le numéro de la colonne C doit être utilisé pour le décompte des essais
+          // On suppose que j.numero_c correspond à la colonne C (numéro d'essai)
+          let essais = 0;
+          const joueurNum = j.numero_c !== undefined && j.numero_c !== null && j.numero_c !== ''
+            ? String(j.numero_c).trim()
+            : String(j.numero).trim();
+          let scorers = [];
+          if (team === match.team_1 && Array.isArray(match.scorers_1)) {
+            scorers = match.scorers_1;
+          } else if (team === match.team_2 && Array.isArray(match.scorers_2)) {
+            scorers = match.scorers_2;
+          }
+          essais = scorers.filter(num => String(num).trim() === joueurNum).length;
+          return (
+            <tr key={i}>
+              <td style={{ ...styles.joueurCell, padding: '6px 8px' }}>{j.numero}</td>
+              <td style={{ ...styles.joueurCell, padding: '6px 8px' }}>{j.nom}</td>
+              <td style={{ ...styles.joueurCell, padding: '6px 8px' }}>{j.prenom}</td>
+              <td style={{ ...styles.joueurCell, padding: '6px 8px' }}>{essais > 0 ? essais : ''}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
 
+
+  // Si pas de match sélectionné, on n'affiche rien
   if (!match) return null;
 
+  // Rendu principal de la fiche de match
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
+        {/* Zone imprimable/exportable */}
         <div className="printable" ref={ficheRef} style={styles.printable}>
           <div style={styles.redBarTop}></div>
           <div style={styles.header}>
@@ -76,24 +113,35 @@ export default function Fiche({ match, onClose }) {
             />
           </div>
 
+          {/* Score et infos principales */}
+          {typeof match.score_1 !== 'undefined' && typeof match.score_2 !== 'undefined' && (
+            <p><strong>Score :</strong> {match.team_1} {match.score_1} - {match.score_2} {match.team_2}</p>
+          )}
           <p><strong>Heure :</strong> {match.time}</p>
           <p><strong>Lieu :</strong> {match.lieu || 'Non précisé'}</p>
           {match.arbitres && (
             <p><strong>Arbitres :</strong> {match.arbitres}</p>
           )}
 
-          <div style={{ marginBottom: 20 }}>
-            <p><strong>Équipe 1 :</strong> {match.team_1}</p>
-            {Array.isArray(match.joueurs_1) && renderJoueurs(match.joueurs_1)}
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <p><strong>Équipe 2 :</strong> {match.team_2}</p>
-            {Array.isArray(match.joueurs_2) && renderJoueurs(match.joueurs_2)}
+          {/* Listes des joueurs des deux équipes */}
+          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginBottom: 20 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 6 }}>
+                {match.team_1}
+              </p>
+              {Array.isArray(match.joueurs_1) && renderJoueurs(match.joueurs_1, match.team_1)}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 6 }}>
+                {match.team_2}
+              </p>
+              {Array.isArray(match.joueurs_2) && renderJoueurs(match.joueurs_2, match.team_2)}
+            </div>
           </div>
           <div style={styles.redBarBottom}></div>
         </div>
 
+        {/* Boutons d'action */}
         <div style={styles.buttonRow}>
           <button style={styles.button} onClick={onClose}>Fermer</button>
           <button style={{ ...styles.button, backgroundColor: '#555' }} onClick={() => window.print()}>Imprimer</button>

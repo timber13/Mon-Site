@@ -7,7 +7,12 @@ import Fiche from '../components/Fiche';
 export default function ResultatsNationals({ isAdmin, tablesNationals, setTablesNationals }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const { addTables } = useContext(ResultatsContext);
+  const { setTables } = useContext(ResultatsContext);
+
+  // Sauvegarde automatique dans localStorage à chaque changement
+  React.useEffect(() => {
+    localStorage.setItem('resultatsData_nationals', JSON.stringify(tablesNationals));
+  }, [tablesNationals]);
 
   const styles = {
     container: {
@@ -113,8 +118,13 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
     if (!files.length) return;
     try {
       const newTables = await parseExcelFiles(files);
-      setTablesNationals(prev => [...prev, ...newTables]);
-      addTables(newTables); // Ajoute aussi au contexte global pour TopScorers
+      const updated = [...tablesNationals, ...newTables];
+      setTablesNationals(updated);
+      localStorage.setItem('resultatsData_nationals', JSON.stringify(updated));
+      // Merge all divisions for global context
+      const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
+      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
+      setTables([...updated, ...west, ...east]);
     } catch (err) {
       alert("Erreur lors de l'importation du fichier. Assurez-vous que le format est correct.");
     }
@@ -126,6 +136,10 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser les résultats Nationals ?')) {
       localStorage.removeItem('resultatsData_nationals');
       setTablesNationals([]);
+      // Merge all divisions for global context
+      const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
+      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
+      setTables([...west, ...east]);
     }
   };
 
@@ -147,7 +161,17 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
           <div style={styles.titleContainer}>
             <h2 style={styles.title}>{title}</h2>
             {isAdmin && (
-              <button style={styles.deleteBtn} onClick={() => setTablesNationals(tablesNationals.filter((_, i) => i !== idx))}>🗑 Supprimer</button>
+              <button
+                style={styles.deleteBtn}
+                onClick={() => {
+                  const updated = tablesNationals.filter((_, i2) => i2 !== idx);
+                  setTablesNationals(updated);
+                  // Merge all divisions for global context
+                  const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
+                  const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
+                  setTables([...updated, ...west, ...east]);
+                }}
+              >🗑 Supprimer</button>
             )}
           </div>
           <table style={styles.table}>
@@ -168,9 +192,12 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
                 const team2Win = !isNaN(score1) && !isNaN(score2) && score2 > score1;
                 const isOdd = i % 2 === 1;
                 const isHovered = hoverIndex === i;
+                // DEBUG : Affiche toutes les infos du match
+                // console.log(row);
+                // ...
                 return (
                   <tr
-                    key={i}
+                    key={row.time + '-' + row.team_1 + '-' + row.team_2 + '-' + i}
                     style={{
                       ...styles.tr,
                       ...(isOdd ? styles.trOdd : {}),
@@ -179,7 +206,7 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
                     onMouseEnter={() => setHoverIndex(i)}
                     onMouseLeave={() => setHoverIndex(null)}
                   >
-                    <td style={{ ...styles.td, ...styles.timeCell }}>{row.time}</td>
+                    <td style={{ ...styles.td, ...styles.timeCell }}>{row.time && String(row.time).trim() !== '' ? row.time : <span style={{ color: '#aaa' }}>—</span>}</td>
                     <td style={{ ...styles.td, ...styles.teamCell(team1Win) }}>{row.team_1}</td>
                     <td style={styles.td}>
                       <span style={{ fontWeight: team1Win ? 'bold' : 'normal' }}>{row.score_1}</span> - <span style={{ fontWeight: team2Win ? 'bold' : 'normal' }}>{row.score_2}</span>
@@ -195,6 +222,7 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
               })}
             </tbody>
           </table>
+          {/* ...ligne debug supprimée... */}
         </div>
       ))}
       {selectedMatch && (

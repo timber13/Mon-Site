@@ -6,9 +6,13 @@ import { ResultatsContext } from '../contexts/ResultatsContext';
 import Fiche from '../components/Fiche';
 
 export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEast }) {
+  // Sauvegarde automatique dans localStorage à chaque changement
+  React.useEffect(() => {
+    localStorage.setItem('resultatsData_regionalEast', JSON.stringify(tablesEast));
+  }, [tablesEast]);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const { addTables } = useContext(ResultatsContext);
+  const { setTables } = useContext(ResultatsContext);
 
   const styles = {
     container: {
@@ -114,8 +118,12 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
     if (!files.length) return;
     try {
       const newTables = await parseExcelFiles(files);
-      setTablesEast(prev => [...prev, ...newTables]);
-      addTables(newTables); // Ajoute aussi au contexte global pour TopScorers
+      const updated = [...tablesEast, ...newTables];
+      setTablesEast(updated);
+      // Merge all divisions for global context
+      const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
+      const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
+      setTables([...nationals, ...west, ...updated]);
     } catch (err) {
       alert("Erreur lors de l'importation du fichier. Assurez-vous que le format est correct.");
     }
@@ -125,8 +133,12 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
   // Reset handler
   const handleReset = () => {
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser les résultats Regional East ?')) {
-      localStorage.removeItem('resultatsData_east');
+      localStorage.removeItem('resultatsData_regionalEast');
       setTablesEast([]);
+      // Merge all divisions for global context
+      const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
+      const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
+      setTables([...nationals, ...west]);
     }
   };
 
@@ -143,32 +155,44 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
           </button>
         </div>
       )}
-      {tablesEast.map(({ title, data }, idx) => (
-        <div key={idx} style={styles.container}>
-          <div style={styles.titleContainer}>
-            <h2 style={styles.title}>{title}</h2>
-            {isAdmin && (
-              <button style={styles.deleteBtn} onClick={() => setTablesEast(tablesEast.filter((_, i) => i !== idx))}>🗑 Supprimer</button>
-            )}
-          </div>
-          <table style={styles.table}>
-            <thead style={styles.thead}>
-              <tr>
-                <th style={styles.th}>Heure</th>
-                <th style={styles.th}>Équipe 1</th>
-                <th style={styles.th}>Score</th>
-                <th style={styles.th}>Équipe 2</th>
-                <th style={styles.th}>Fiche</th>
-              </tr>
-            </thead>
-            <tbody style={styles.tbody}>
-              {data.map((row, i) => {
-                const score1 = Number(row.score_1);
-                const score2 = Number(row.score_2);
-                const team1Win = !isNaN(score1) && !isNaN(score2) && score1 > score2;
-                const team2Win = !isNaN(score1) && !isNaN(score2) && score2 > score1;
-                const isOdd = i % 2 === 1;
-                const isHovered = hoverIndex === i;
+      {tablesEast.length === 0
+        ? <p style={{ color: '#888' }}>No Result for Regional East</p>
+        : tablesEast.map(({ title, data }, idx) => (
+          <div key={idx} style={styles.container}>
+            <div style={styles.titleContainer}>
+              <h2 style={styles.title}>{title}</h2>
+              {isAdmin && (
+                <button
+                  style={styles.deleteBtn}
+                  onClick={() => {
+                    const updated = tablesEast.filter((_, i2) => i2 !== idx);
+                    setTablesEast(updated);
+                    // Merge all divisions for global context
+                    const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
+                    const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
+                    setTables([...nationals, ...west, ...updated]);
+                  }}
+                >🗑 Supprimer</button>
+              )}
+            </div>
+            <table style={styles.table}>
+              <thead style={styles.thead}>
+                <tr>
+                  <th style={styles.th}>Heure</th>
+                  <th style={styles.th}>Équipe 1</th>
+                  <th style={styles.th}>Score</th>
+                  <th style={styles.th}>Équipe 2</th>
+                  <th style={styles.th}>Fiche</th>
+                </tr>
+              </thead>
+              <tbody style={styles.tbody}>
+                {data.map((row, i) => {
+                  const score1 = Number(row.score_1);
+                  const score2 = Number(row.score_2);
+                  const team1Win = !isNaN(score1) && !isNaN(score2) && score1 > score2;
+                  const team2Win = !isNaN(score1) && !isNaN(score2) && score2 > score1;
+                  const isOdd = i % 2 === 1;
+                  const isHovered = hoverIndex === i;
                 return (
                   <tr
                     key={i}

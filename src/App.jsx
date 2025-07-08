@@ -1,18 +1,22 @@
 // src/App.jsx
 
 import React, { useState, useEffect } from 'react';
+
 import Resultats from './pages/Resultats';
 import Classement from './pages/Classement';
 import Scorers from './pages/Scorers';
+import Menu from './components/Menu';
 import Matchs from './pages/Matchs';
-import Formation from './pages/Formation';
+import Referees from './pages/Referees';
 import Photos from './pages/Photos';
 import AdminPanel from './components/Admin';
 import { ExcelProvider } from './contexts/ExcelContext';
 import { ResultatsProvider } from './contexts/ResultatsContext';
+import Home from './pages/Home';
+import SwissCup from './pages/SwissCup';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('resultats');
+  const [activeTab, setActiveTab] = useState('home');
 
   // --- Admin state ---
   const allowedAdmins = ['admin@touch.ch','orga@touch.ch','timothee@touch.ch','contact@touch.ch'];
@@ -93,48 +97,135 @@ function App() {
   return (
     <ExcelProvider>
       <ResultatsProvider>
-        <div style={{ maxWidth: 900, margin: 'auto', padding: 20, fontFamily: 'Arial, sans-serif', position: 'relative' }}>
-          
-          {/* Admin Panel */}
-          <AdminPanel
-            isAdmin={isAdmin}
-            adminEmail={adminEmail}
-            setAdminEmail={setAdminEmail}
-            setIsAdmin={setIsAdmin}
-            showLogin={showLogin}
-            setShowLogin={setShowLogin}
-            adminPass={adminPass}
-            setAdminPass={setAdminPass}
-            adminError={adminError}
-            setAdminError={setAdminError}
-            showChangePass={showChangePass}
-            setShowChangePass={setShowChangePass}
-            newPass={newPass}
-            setNewPass={setNewPass}
-            confirmPass={confirmPass}
-            setConfirmPass={setConfirmPass}
-            handleAdminLogin={handleAdminLogin}
-            handleLogout={handleLogout}
-            handleChangePass={handleChangePass}
-          />
+        <div
+          style={{
+            minHeight: '100vh',
+            width: '100%',
+            margin: 0,
+            padding: 0,
+            boxSizing: 'border-box',
+            background: 'linear-gradient(135deg, #fff 0%, #f8f8f8 100%)',
+            fontFamily: 'Montserrat, Arial, sans-serif',
+            fontSize: '0.97rem',
+            lineHeight: 1.5,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            overflowX: 'hidden',
+            paddingTop: 74, // Pour compenser la barre de menu fixe (hauteur du menu)
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: 1400, minWidth: 0 }}>
+            <Menu activeTab={activeTab} setActiveTab={setActiveTab} onAdminClick={() => setShowLogin(true)} />
+          </div>
 
-          {/* Navigation */}
-          <nav style={{ marginBottom: 20 }}>
-            <button style={tabStyle('resultats')}    onClick={() => setActiveTab('resultats')}>Résultats</button>
-            <button style={tabStyle('classement')}   onClick={() => setActiveTab('classement')}>Classement</button>
-            {/* Onglet TopScorers supprimé de la navigation principale */}
-            <button style={tabStyle('matchs')}       onClick={() => setActiveTab('matchs')}>Matchs</button>
-            <button style={tabStyle('formation')}    onClick={() => setActiveTab('formation')}>Formations</button>
-            <button style={tabStyle('photos')}       onClick={() => setActiveTab('photos')}>Photos</button>
-          </nav>
+          {/* Admin Panel en superposition */}
+          {showLogin && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(0,0,0,0.32)',
+              zIndex: 2000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <div style={{
+                background: '#fff',
+                borderRadius: 22,
+                boxShadow: '0 8px 24px #c0020a55',
+                padding: '36px 28px 28px 28px',
+                minWidth: 340,
+                maxWidth: '94vw',
+                minHeight: 220,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                transition: 'all 0.2s',
+              }}>
+                <button onClick={() => setShowLogin(false)} style={{
+                  position: 'absolute',
+                  top: 18,
+                  right: 22,
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 28,
+                  color: '#c00',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  zIndex: 2,
+                }}>×</button>
+                <div style={{ width: '100%', maxWidth: 320, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 120 }}>
+                  <AdminPanel
+                    isAdmin={isAdmin}
+                    adminEmail={adminEmail}
+                    setAdminEmail={setAdminEmail}
+                    setIsAdmin={setIsAdmin}
+                    showLogin={showLogin}
+                    setShowLogin={setShowLogin}
+                    adminPass={adminPass}
+                    setAdminPass={setAdminPass}
+                    adminError={adminError}
+                    setAdminError={setAdminError}
+                    showChangePass={showChangePass}
+                    setShowChangePass={setShowChangePass}
+                    newPass={newPass}
+                    setNewPass={setNewPass}
+                    confirmPass={confirmPass}
+                    setConfirmPass={setConfirmPass}
+                    handleAdminLogin={handleAdminLogin}
+                    handleLogout={handleLogout}
+                    handleChangePass={handleChangePass}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Contenu des onglets */}
-          {activeTab === 'resultats'  && <Resultats isAdmin={isAdmin} adminEmail={adminEmail} />}
-          {activeTab === 'classement' && <Classement />}
-          {/* Affichage TopScorers supprimé de la navigation principale */}
-          {activeTab === 'matchs'     && <Matchs />}
-          {activeTab === 'formation'  && <Formation isAdmin={isAdmin} />}
-          {activeTab === 'photos'     && <Photos isAdmin={isAdmin} adminEmail={adminEmail} />}
+          {/* Contenu des onglets, responsive et centré */}
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 1400,
+              minWidth: 0,
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              padding: '0 2vw',
+              boxSizing: 'border-box',
+            }}
+          >
+            {activeTab === 'home' && (
+              <React.Suspense fallback={null}>
+                <Home setActiveTabFromHome={setActiveTab} />
+              </React.Suspense>
+            )}
+            {activeTab === 'swisscup' && (
+              <SwissCup
+                isAdmin={isAdmin}
+                adminEmail={adminEmail}
+                showNationalsTab
+                // Synchronise l'onglet cible si demandé depuis Home
+                initialTab={localStorage.getItem('swisscup_target_tab') || undefined}
+                initialSubTab={localStorage.getItem('swisscup_target_subtab') || undefined}
+                onTabSync={() => {
+                  localStorage.removeItem('swisscup_target_tab');
+                  localStorage.removeItem('swisscup_target_subtab');
+                }}
+              />
+            )}
+            {activeTab === 'matchs'     && <Matchs />}
+            {activeTab === 'referees'  && <Referees isAdmin={isAdmin} />}
+            {activeTab === 'photos'     && <Photos isAdmin={isAdmin} adminEmail={adminEmail} />}
+          </div>
         </div>
       </ResultatsProvider>
     </ExcelProvider>

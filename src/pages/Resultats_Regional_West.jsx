@@ -5,9 +5,13 @@ import { ResultatsContext } from '../contexts/ResultatsContext';
 import Fiche from '../components/Fiche';
 
 export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWest }) {
+  // Sauvegarde automatique dans localStorage à chaque changement
+  React.useEffect(() => {
+    localStorage.setItem('resultatsData_regionalWest', JSON.stringify(tablesWest));
+  }, [tablesWest]);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const { addTables } = useContext(ResultatsContext);
+  const { setTables } = useContext(ResultatsContext);
 
   const styles = {
     container: {
@@ -113,8 +117,12 @@ export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWe
     if (!files.length) return;
     try {
       const newTables = await parseExcelFiles(files);
-      setTablesWest(prev => [...prev, ...newTables]);
-      addTables(newTables); // Ajoute aussi au contexte global pour TopScorers
+      const updated = [...tablesWest, ...newTables];
+      setTablesWest(updated);
+      // Merge all divisions for global context
+      const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
+      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
+      setTables([...nationals, ...updated, ...east]);
     } catch (err) {
       alert("Erreur lors de l'importation du fichier. Assurez-vous que le format est correct.");
     }
@@ -124,8 +132,12 @@ export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWe
   // Reset handler
   const handleReset = () => {
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser les résultats Regional West ?')) {
-      localStorage.removeItem('resultatsData_west');
+      localStorage.removeItem('resultatsData_regionalWest');
       setTablesWest([]);
+      // Merge all divisions for global context
+      const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
+      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
+      setTables([...nationals, ...east]);
     }
   };
 
@@ -143,14 +155,24 @@ export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWe
         </div>
       )}
       {tablesWest.length === 0
-        ? <p style={{ color: '#888' }}>Aucun résultat Regional West.</p>
+        ? <p style={{ color: '#888' }}>No Result for Regional West</p>
         : tablesWest.map(({ title, data }, idx) => (
           <div key={idx} style={styles.container}>
             <div style={styles.titleContainer}>
               <h2 style={styles.title}>{title}</h2>
-              {isAdmin && (
-                <button style={styles.deleteBtn} onClick={() => setTablesWest(tablesWest.filter((_, i) => i !== idx))}>🗑 Supprimer</button>
-              )}
+            {isAdmin && (
+              <button
+                style={styles.deleteBtn}
+                onClick={() => {
+                  const updated = tablesWest.filter((_, i2) => i2 !== idx);
+                  setTablesWest(updated);
+                  // Merge all divisions for global context
+                  const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
+                  const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
+                  setTables([...nationals, ...updated, ...east]);
+                }}
+              >🗑 Supprimer</button>
+            )}
             </div>
             <table style={styles.table}>
               <thead style={styles.thead}>

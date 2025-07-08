@@ -1,22 +1,10 @@
-import React, { useEffect, useState, useContext } from "react";
-import { ExcelContext } from '../contexts/ExcelContext';
 
-export default function ClassementNationals() {
-  const [tablesNationals, setTablesNationals] = useState([]);
+import React, { useState } from "react";
+
+// ClassementNationals is now a pure component that receives tablesNationals as a prop
+export default function ClassementNationals({ tablesNationals = [] }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  const { parseExcelFiles } = useContext(ExcelContext);
-
-  // Rafraîchir le classement dès qu'un nouveau fichier Excel est importé (via storage event)
-  useEffect(() => {
-    const updateFromStorage = () => {
-      const savedN = localStorage.getItem('resultatsData_nationals');
-      setTablesNationals(savedN ? JSON.parse(savedN) : []);
-    };
-    updateFromStorage();
-    window.addEventListener('storage', updateFromStorage);
-    return () => window.removeEventListener('storage', updateFromStorage);
-  }, []);
 
   const getMatchsForTeam = (team) => {
     const matchs = [];
