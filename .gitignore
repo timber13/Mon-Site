@@ -36,3 +36,4 @@ coverage/
 # Optional: ignore Excel files (remove if you want to version them)
 *.xls
 *.xlsx
+.vercel
