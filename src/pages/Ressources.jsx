@@ -11,7 +11,7 @@ export default function Ressources({ isAdmin = false }) {
       localStorage.removeItem('ressourcesList');
       return [];
     }
-  });
+  }); // (déjà robuste)
   const [title, setTitle] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [error, setError] = useState('');

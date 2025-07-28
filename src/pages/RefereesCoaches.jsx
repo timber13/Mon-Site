@@ -4,9 +4,13 @@ import React from 'react';
 
 export default function RefereesCoaches({ isAdmin = false }) {
   const [people, setPeople] = React.useState(() => {
-    // Persistance locale
-    const saved = localStorage.getItem('refereesCoaches');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('refereesCoaches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      localStorage.removeItem('refereesCoaches');
+      return [];
+    }
   });
   const [form, setForm] = React.useState({ nom: '', prenom: '', type: '', photo: '' });
   const [preview, setPreview] = React.useState('');

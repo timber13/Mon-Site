@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 
 export default function Formation({ isAdmin = false }) {
   const [posts, setPosts] = useState(() => {
-    const saved = localStorage.getItem('refereesFormationPosts');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('refereesFormationPosts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      localStorage.removeItem('refereesFormationPosts');
+      return [];
+    }
   });
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
@@ -17,6 +22,8 @@ export default function Formation({ isAdmin = false }) {
   const [editLink, setEditLink] = useState('');
   const [editImage, setEditImage] = useState('');
   const [editError, setEditError] = useState('');
+  // Pour l'affichage du post en grand
+  const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('refereesFormationPosts', JSON.stringify(posts));
@@ -89,6 +96,7 @@ export default function Formation({ isAdmin = false }) {
   };
 
   return (
+
     <div style={{ maxWidth: 700, margin: 'auto', padding: 20 }}>
       <h2 style={{ color: '#c00', textAlign: 'center', marginBottom: 20 }}> Formations - Referees </h2>
       {isAdmin && (
@@ -182,32 +190,41 @@ export default function Formation({ isAdmin = false }) {
                     <button onClick={handleCancelEdit} style={{ background: '#888', color: 'white', border: 'none', borderRadius: 4, padding: '6px 14px', fontWeight: 'bold', cursor: 'pointer' }}>Annuler</button>
                   </div>
                 ) : (
-                  <>
-                    <h3 style={{ color: '#c00', marginTop: 0 }}>{post.title}</h3>
+                  // WordPress-style post layout
+                  <article
+                    style={{
+                      background: '#fff',
+                      borderRadius: 8,
+                      boxShadow: '0 2px 8px #eee',
+                      marginBottom: 24,
+                      overflow: 'hidden',
+                      border: '1px solid #eee',
+                      position: 'relative',
+                    }}
+                  >
                     {post.image && (
-                      <img src={post.image} alt="Formation visuel" style={{ maxWidth: '100%', maxHeight: 220, display: 'block', margin: '10px auto 16px auto', borderRadius: 8, objectFit: 'cover' }} />
+                      <div style={{ width: '100%', maxHeight: 260, overflow: 'hidden', background: '#f8f8f8' }}>
+                        <img src={post.image} alt={post.title || 'visuel'} style={{ width: '100%', objectFit: 'cover', maxHeight: 260, display: 'block' }} />
+                      </div>
                     )}
-                    <pre style={{ marginBottom: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'inherit', background: 'none', border: 'none', padding: 0 }}>{post.text}</pre>
-                    <a href={post.link} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'underline' }}>Voir la ressource</a>
-                    {isAdmin && (
-                      <>
-                        <button
-                          onClick={e => { e.stopPropagation(); handleEditPost(idx); }}
-                          style={{ position: 'absolute', top: 16, right: 100, background: '#fff', color: '#007bff', border: '1px solid #007bff', borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontWeight: 'bold', marginRight: 16 }}
-                          title="Modifier ce post"
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={e => { e.stopPropagation(); handleDeletePost(idx); }}
-                          style={{ position: 'absolute', top: 16, right: 16, background: '#fff', color: '#c00', border: '1px solid #c00', borderRadius: 4, padding: '4px 10px', cursor: 'pointer', fontWeight: 'bold' }}
-                          title="Supprimer ce post"
-                        >
-                          Supprimer
-                        </button>
-                      </>
-                    )}
-                  </>
+                    <div style={{ padding: 24 }}>
+                      <header>
+                        <h2 style={{ color: '#c00', fontSize: 22, margin: '0 0 10px 0', fontWeight: 700 }}>{post.title}</h2>
+                      </header>
+                      <section style={{ color: '#222', fontSize: 16, marginBottom: 10, whiteSpace: 'pre-line', lineHeight: 1.6 }}>{post.text}</section>
+                      {post.link && (
+                        <a href={post.link} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 500, fontSize: 15 }}>
+                          {post.link}
+                        </a>
+                      )}
+                      {isAdmin && (
+                        <div style={{ display: 'flex', gap: 8, marginTop: 18, position: 'absolute', top: 16, right: 16 }}>
+                          <button onClick={e => { e.stopPropagation(); handleEditPost(idx); }} style={{ background: '#ffb300', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Modifier</button>
+                          <button onClick={e => { e.stopPropagation(); handleDeletePost(idx); }} style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Supprimer</button>
+                        </div>
+                      )}
+                    </div>
+                  </article>
                 )}
               </div>
             ))}

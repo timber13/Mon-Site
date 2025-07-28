@@ -5,8 +5,13 @@ import React, { useState, useEffect } from 'react';
 // Composant News : permet de poster des actualités (comme Formation)
 export default function News({ isAdmin = false }) {
   const [posts, setPosts] = useState(() => {
-    const saved = localStorage.getItem('refereesNewsPosts');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('refereesNewsPosts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      localStorage.removeItem('refereesNewsPosts');
+      return [];
+    }
   });
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
@@ -187,28 +192,38 @@ export default function News({ isAdmin = false }) {
                 </div>
               ) : (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, color: '#c00', fontSize: 18 }}>{post.title}</div>
-                      <div style={{ color: '#333', fontSize: 15, margin: '6px 0 0 0', whiteSpace: 'pre-line' }}>{post.text}</div>
+                  {/* WordPress-style post layout */}
+                  <article style={{
+                    background: '#fff',
+                    borderRadius: 8,
+                    boxShadow: '0 2px 8px #eee',
+                    marginBottom: 24,
+                    overflow: 'hidden',
+                    border: '1px solid #eee',
+                  }}>
+                    {post.image && (
+                      <div style={{ width: '100%', maxHeight: 260, overflow: 'hidden', background: '#f8f8f8' }}>
+                        <img src={post.image} alt={post.title || 'visuel'} style={{ width: '100%', objectFit: 'cover', maxHeight: 260, display: 'block' }} />
+                      </div>
+                    )}
+                    <div style={{ padding: 24 }}>
+                      <header>
+                        <h2 style={{ color: '#c00', fontSize: 22, margin: '0 0 10px 0', fontWeight: 700 }}>{post.title}</h2>
+                      </header>
+                      <section style={{ color: '#222', fontSize: 16, marginBottom: 10, whiteSpace: 'pre-line', lineHeight: 1.6 }}>{post.text}</section>
                       {post.link && (
-                        <div style={{ marginTop: 6 }}>
-                          <a href={post.link} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 500 }}>
-                            {post.link}
-                          </a>
+                        <a href={post.link} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'underline', fontWeight: 500, fontSize: 15 }}>
+                          {post.link}
+                        </a>
+                      )}
+                      {isAdmin && (
+                        <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+                          <button onClick={() => handleEditPost(idx)} style={{ background: '#ffb300', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Modifier</button>
+                          <button onClick={() => handleDeletePost(idx)} style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Supprimer</button>
                         </div>
                       )}
                     </div>
-                    {post.image && (
-                      <img src={post.image} alt="aperçu" style={{ maxWidth: 120, maxHeight: 120, borderRadius: 6, marginLeft: 12 }} />
-                    )}
-                  </div>
-                  {isAdmin && (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                      <button onClick={() => handleEditPost(idx)} style={{ background: '#ffb300', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Modifier</button>
-                      <button onClick={() => handleDeletePost(idx)} style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Supprimer</button>
-                    </div>
-                  )}
+                  </article>
                 </>
               )}
             </div>

@@ -1,20 +1,26 @@
 
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, useEffect, useState } from 'react';
 import { ResultatsContext } from '../contexts/ResultatsContext';
+
 
 const Scorers = () => {
   const { tables } = useContext(ResultatsContext);
+  const [topScorers, setTopScorers] = useState(() => {
+    // Récupère du localStorage au premier rendu
+    try {
+      return JSON.parse(localStorage.getItem('topScorersData')) || [];
+    } catch {
+      return [];
+    }
+  });
 
-  // Calcul du classement des buteurs (essais marqués)
-  const topScorers = useMemo(() => {
+  useEffect(() => {
     const scorerMap = {};
     tables.forEach(({ data }) => {
       data.forEach(match => {
-        // On compte les essais à partir des tableaux scorers_1 et scorers_2
         const addEssais = (scorers, joueurs, club) => {
           if (!Array.isArray(scorers) || !Array.isArray(joueurs)) return;
           scorers.forEach(num => {
-            // On cherche le joueur correspondant au numéro
             const joueur = joueurs.find(j => String(j.numero).trim() === String(num).trim());
             if (joueur) {
               const key = (String(joueur.prenom || '') + '-' + (joueur.nom || '') + '-' + (club || '')).trim();
@@ -27,10 +33,13 @@ const Scorers = () => {
         addEssais(match.scorers_2, match.joueurs_2, match.team_2);
       });
     });
-    return Object.values(scorerMap)
+    const result = Object.values(scorerMap)
       .filter(j => (j.nom || j.prenom) && j.essais > 0)
       .sort((a, b) => b.essais - a.essais)
       .slice(0, 50);
+    setTopScorers(result);
+    // Sauvegarde dans le localStorage
+    localStorage.setItem('topScorersData', JSON.stringify(result));
   }, [tables]);
 
   return (

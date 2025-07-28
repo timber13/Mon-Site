@@ -6,7 +6,7 @@ import Resultats from './pages/Resultats';
 import Classement from './pages/Classement';
 import Scorers from './pages/Scorers';
 import Menu from './components/Menu';
-import Matchs from './pages/Matchs';
+import Calendar from './pages/Calendar';
 import Referees from './pages/Referees';
 import Photos from './pages/Photos';
 import AdminPanel from './components/Admin';
@@ -222,7 +222,7 @@ function App() {
                 }}
               />
             )}
-            {activeTab === 'matchs'     && <Matchs />}
+            {activeTab === 'matchs'     && <Calendar />}
             {activeTab === 'referees'  && <Referees isAdmin={isAdmin} />}
             {activeTab === 'photos'     && <Photos isAdmin={isAdmin} adminEmail={adminEmail} />}
           </div>
