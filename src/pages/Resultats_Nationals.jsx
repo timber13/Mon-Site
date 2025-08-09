@@ -148,11 +148,11 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
       {isAdmin && (
         <div style={{ display: 'flex', gap: '12px', marginBottom: 20 }}>
           <label style={{ background: '#c00', color: 'white', borderRadius: 4, padding: '6px 14px', cursor: 'pointer', fontWeight: 'bold' }}>
-            Importer
+            Import
             <input type="file" accept=".xlsx, .xls" style={{ display: 'none' }} multiple onChange={handleImport} />
           </label>
           <button style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 4, padding: '6px 14px', cursor: 'pointer', fontWeight: 'bold' }} onClick={handleReset}>
-            Réinitialiser
+            Reset
           </button>
         </div>
       )}
@@ -177,11 +177,11 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
           <table style={styles.table}>
             <thead style={styles.thead}>
               <tr>
-                <th style={styles.th}>Heure</th>
-                <th style={styles.th}>Équipe 1</th>
+                <th style={styles.th}>Time</th>
+                <th style={styles.th}>Team 1</th>
                 <th style={styles.th}>Score</th>
-                <th style={styles.th}>Équipe 2</th>
-                <th style={styles.th}>Fiche</th>
+                <th style={styles.th}>Team 2</th>
+                <th style={styles.th}>Sheets</th>
               </tr>
             </thead>
             <tbody style={styles.tbody}>

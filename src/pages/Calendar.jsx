@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import NextEventsColumn from '../components/NextEventsColumn';
+import { AddEventModal, EditEventForm } from '../components/EventModals';
 
 const monthNames = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -10,14 +12,26 @@ function getDaysInMonth(year, month) {
 }
 
 export default function Calendar({ isAdmin = true }) {
+  const [filterTag, setFilterTag] = useState('');
   const today = new Date();
   // Exemple d'événements (clé: yyyy-mm-dd, valeur: tableau d'événements)
   // Chargement des événements depuis localStorage ou valeur initiale
+  // Migration automatique des anciens événements (tag:string) vers tags:array
   const getInitialEvents = () => {
     try {
       const stored = localStorage.getItem('calendarEvents');
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        Object.keys(parsed).forEach(dateKey => {
+          parsed[dateKey] = parsed[dateKey].map(ev => {
+            if (Array.isArray(ev.tags)) return ev;
+            if (typeof ev.tag === 'string' && ev.tag.trim() !== '') {
+              return { ...ev, tags: ev.tag.split(',').map(t => t.trim()).filter(Boolean), tag: undefined };
+            }
+            return { ...ev, tags: [] };
+          });
+        });
+        return parsed;
       }
     } catch (e) {
       // Si données corrompues, on ignore
@@ -32,11 +46,11 @@ export default function Calendar({ isAdmin = true }) {
     date: '',
     title: '',
     color: '#c00',
-    tag: '',
+    tags: '', // string input, comma-separated
   });
   const [eventList, setEventList] = useState(getInitialEvents); // events est l'objet initial (modifiable)
   const [editEventIdx, setEditEventIdx] = useState(null); // index de l'event en édition
-  const [editEventForm, setEditEventForm] = useState({ title: '', color: '#c00', tag: '' });
+  const [editEventForm, setEditEventForm] = useState({ title: '', color: '#c00', tags: '' });
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
@@ -81,12 +95,14 @@ export default function Calendar({ isAdmin = true }) {
       prevEvents[eventForm.date].push({
         title: eventForm.title,
         color: eventForm.color,
-        tag: eventForm.tag
+        tags: eventForm.tags
+          ? eventForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+          : []
       });
       return prevEvents;
     });
     setShowAddEvent(false);
-    setEventForm({ date: '', title: '', color: '#c00', tag: '' });
+    setEventForm({ date: '', title: '', color: '#c00', tags: '' });
   };
 
   // Suppression d'un événement
@@ -104,14 +120,27 @@ export default function Calendar({ isAdmin = true }) {
   // Début édition
   const handleStartEdit = (ev, idx) => {
     setEditEventIdx(idx);
-    setEditEventForm({ title: ev.title, color: ev.color, tag: ev.tag });
+    setEditEventForm({
+      title: ev.title,
+      color: ev.color,
+      tags: Array.isArray(ev.tags)
+        ? ev.tags.join(', ')
+        : (typeof ev.tag === 'string' ? ev.tag : '')
+    });
   };
   // Sauvegarde édition
   const handleSaveEdit = (dateKey, idx) => {
     setEventList(prev => {
       const prevEvents = { ...prev };
       if (!prevEvents[dateKey]) return prevEvents;
-      prevEvents[dateKey][idx] = { ...prevEvents[dateKey][idx], ...editEventForm };
+      prevEvents[dateKey][idx] = {
+        ...prevEvents[dateKey][idx],
+        title: editEventForm.title,
+        color: editEventForm.color,
+        tags: editEventForm.tags
+          ? editEventForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+          : []
+      };
       return prevEvents;
     });
     setEditEventIdx(null);
@@ -184,117 +213,129 @@ export default function Calendar({ isAdmin = true }) {
     eventsForDay = eventList[selectedDay.dateKey] || [];
   }
 
+  const tableStyle = {
+    width: '100%',
+    borderCollapse: 'separate',
+    borderSpacing: '6px',
+    fontSize: 18,
+    tableLayout: 'fixed',
+  };
   return (
-    <>
-      <div style={{
-        width: '66vw',
-        minWidth: 480,
-        maxWidth: '100vw',
-        height: 'auto',
-        background: 'white',
-        borderRadius: 16,
-        boxShadow: '0 4px 24px #c0020a22',
-        padding: 32,
-        marginLeft: 0,
-        marginRight: 'auto',
-        display: 'block',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <button onClick={prevMonth} style={{ fontSize: 28, background: 'none', border: 'none', cursor: 'pointer', color: '#c00', fontWeight: 700, padding: 0, width: 40, height: 40, borderRadius: 20, transition: 'background 0.2s' }}>‹</button>
-          <h2 style={{ margin: 0, color: '#c00', fontWeight: 700, fontSize: 28, letterSpacing: 1 }}>{monthNames[currentMonth]} {currentYear}</h2>
-          {isAdmin && (
-            <button onClick={() => setShowAddEvent(true)} style={{ marginLeft: 16, background: '#c00', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 18, cursor: 'pointer' }}>+ event</button>
-          )}
-          <button onClick={nextMonth} style={{ fontSize: 28, background: 'none', border: 'none', cursor: 'pointer', color: '#c00', fontWeight: 700, padding: 0, width: 40, height: 40, borderRadius: 20, transition: 'background 0.2s' }}>›</button>
-        </div>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 6, fontSize: 18, tableLayout: 'fixed' }}>
-          <thead>
-            <tr style={{ color: '#c00', fontWeight: 700, fontSize: 18 }}>
-              <th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows}
-          </tbody>
-        </table>
-      </div>
-      {showAddEvent && (
+    <div style={{ width: '100%', minHeight: '100vh', background: '#f5f6fa' }}>
+      <div style={{ display: 'flex', flexDirection: 'row', width: '100%', alignItems: 'stretch' }}>
+        {/* Colonne calendrier */}
         <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0,0,0,0.25)',
-          zIndex: 4000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-          onClick={() => setShowAddEvent(false)}
-        >
-          <form
-            style={{
-              background: '#fff',
-              borderRadius: 16,
-              boxShadow: '0 8px 32px #c0020a55',
-              padding: 36,
-              minWidth: 320,
-              maxWidth: 420,
-              width: '90vw',
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}
-            onClick={e => e.stopPropagation()}
-            onSubmit={handleAddEvent}
-          >
+          width: '66vw',
+          minWidth: 480,
+          maxWidth: '100vw',
+          height: 'auto',
+          background: 'white',
+          borderRadius: 16,
+          boxShadow: '0 4px 24px #c0020a22',
+          padding: 32,
+          marginLeft: 0,
+          marginRight: 'auto',
+          display: 'block',
+        }}>
+        {/* Bouton + Event pour admin */}
+        {isAdmin && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
             <button
-              type="button"
-              onClick={() => setShowAddEvent(false)}
+              onClick={() => setShowAddEvent(true)}
               style={{
-                position: 'absolute',
-                top: 12,
-                right: 12,
                 background: '#c00',
                 color: '#fff',
                 border: 'none',
-                borderRadius: '50%',
-                width: 32,
-                height: 32,
-                fontWeight: 900,
-                fontSize: 20,
+                borderRadius: 8,
+                padding: '6px 18px',
+                fontWeight: 700,
+                fontSize: 17,
                 cursor: 'pointer',
                 boxShadow: '0 2px 8px #c0020a22',
-                zIndex: 10,
-                lineHeight: 1,
+                marginBottom: 4
               }}
-              title="Fermer"
-            >×</button>
-            <h3 style={{ color: '#c00', fontWeight: 700, marginBottom: 18 }}>Ajouter un événement</h3>
-            <label style={{ width: '100%', marginBottom: 10 }}>
-              Date :
-              <input type="date" value={eventForm.date} onChange={e => setEventForm(f => ({ ...f, date: e.target.value }))} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', marginTop: 4 }} required />
-            </label>
-            <label style={{ width: '100%', marginBottom: 10 }}>
-              Titre :
-              <input type="text" value={eventForm.title} onChange={e => setEventForm(f => ({ ...f, title: e.target.value }))} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', marginTop: 4 }} required />
-            </label>
-            <label style={{ width: '100%', marginBottom: 10 }}>
-              Couleur :
-              <input type="color" value={eventForm.color} onChange={e => setEventForm(f => ({ ...f, color: e.target.value }))} style={{ width: 40, height: 32, marginLeft: 8, verticalAlign: 'middle', border: 'none', background: 'none' }} />
-            </label>
-            <label style={{ width: '100%', marginBottom: 18 }}>
-              Tag :
-              <input type="text" value={eventForm.tag} onChange={e => setEventForm(f => ({ ...f, tag: e.target.value }))} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc', marginTop: 4 }} />
-            </label>
-            <button type="submit" style={{ background: '#c00', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 24px', fontWeight: 700, fontSize: 18, cursor: 'pointer', marginTop: 8 }}>Ajouter</button>
-          </form>
+            >+ Event</button>
+          </div>
+        )}
+        {/* En-tête calendrier avec navigation */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 8,
+          gap: 24
+        }}>
+          <button
+            onClick={prevMonth}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#c00',
+              borderRadius: 8,
+              fontSize: 38,
+              fontWeight: 900,
+              width: 48,
+              height: 48,
+              cursor: 'pointer',
+              boxShadow: 'none',
+              transition: 'background 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              outline: 'none',
+            }}
+            title="Mois précédent"
+          >
+            <span style={{fontSize: 38, fontWeight: 900, lineHeight: 1}}>&#x2B05;</span>
+          </button>
+          <span style={{ fontWeight: 700, fontSize: 26, color: '#c00', letterSpacing: 1, minWidth: 180, textAlign: 'center' }}>
+            {monthNames[currentMonth]} {currentYear}
+          </span>
+          <button
+            onClick={nextMonth}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#c00',
+              borderRadius: 8,
+              fontSize: 38,
+              fontWeight: 900,
+              width: 48,
+              height: 48,
+              cursor: 'pointer',
+              boxShadow: 'none',
+              transition: 'background 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              outline: 'none',
+            }}
+            title="Mois suivant"
+          >
+            <span style={{fontSize: 38, fontWeight: 900, lineHeight: 1}}>&#x27A1;</span>
+          </button>
         </div>
-      )}
+          <table style={tableStyle}>
+            <thead>
+              <tr style={{ color: '#c00', fontWeight: 700, fontSize: 18 }}>
+                <th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows}
+            </tbody>
+          </table>
+        </div>
+        {/* Colonne next events */}
+        <NextEventsColumn eventList={eventList} filterTag={filterTag} setFilterTag={setFilterTag} />
+      </div>
+      <AddEventModal
+        isOpen={isAdmin && showAddEvent}
+        onClose={() => setShowAddEvent(false)}
+        onSubmit={handleAddEvent}
+        eventForm={eventForm}
+        setEventForm={setEventForm}
+      />
       {showOverlay && (
         <div style={{
           position: 'fixed',
@@ -357,36 +398,23 @@ export default function Calendar({ isAdmin = true }) {
                 Aucun événement aujourd'hui
               </div>
             ) : (
-              <ul style={{ padding: 0, margin: 0, listStyle: 'none', width: '100%' }}>
-                {eventsForDay.map((ev, idx) => (
-                  <li key={idx} style={{ color: ev.color || '#222', fontSize: 18, marginBottom: 8, borderLeft: `4px solid ${ev.color || '#c00'}`, paddingLeft: 10, position: 'relative', background: editEventIdx === idx ? '#f8f8f8' : undefined }}>
-                    {isAdmin && editEventIdx === idx ? (
-                      <form onSubmit={e => { e.preventDefault(); handleSaveEdit(selectedDay.dateKey, idx); }} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <input type="text" value={editEventForm.title} onChange={e => setEditEventForm(f => ({ ...f, title: e.target.value }))} style={{ fontSize: 16, padding: 4, borderRadius: 4, border: '1px solid #ccc', width: 120 }} required />
-                        <input type="color" value={editEventForm.color} onChange={e => setEditEventForm(f => ({ ...f, color: e.target.value }))} style={{ width: 32, height: 24, border: 'none', background: 'none' }} />
-                        <input type="text" value={editEventForm.tag} onChange={e => setEditEventForm(f => ({ ...f, tag: e.target.value }))} style={{ fontSize: 14, padding: 4, borderRadius: 4, border: '1px solid #ccc', width: 60 }} placeholder="Tag" />
-                        <button type="submit" style={{ background: '#c00', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>OK</button>
-                        <button type="button" onClick={handleCancelEdit} style={{ background: '#888', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Annuler</button>
-                      </form>
-                    ) : (
-                      <>
-                        <span>{ev.title}</span>
-                        {ev.tag && <span style={{ background: '#eee', color: '#c00', borderRadius: 6, padding: '2px 8px', fontSize: 13, marginLeft: 8 }}>{ev.tag}</span>}
-                        {isAdmin && (
-                          <>
-                            <button onClick={() => handleStartEdit(ev, idx)} style={{ marginLeft: 10, background: '#ffb300', color: '#fff', border: 'none', borderRadius: 6, padding: '2px 8px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Éditer</button>
-                            <button onClick={() => handleDeleteEvent(selectedDay.dateKey, idx)} style={{ marginLeft: 6, background: '#c00', color: '#fff', border: 'none', borderRadius: 6, padding: '2px 8px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Supprimer</button>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
+              <EditEventForm
+                isAdmin={isAdmin}
+                show={true}
+                eventsForDay={eventsForDay}
+                editEventIdx={editEventIdx}
+                editEventForm={editEventForm}
+                setEditEventForm={setEditEventForm}
+                handleSaveEdit={handleSaveEdit}
+                handleCancelEdit={handleCancelEdit}
+                handleStartEdit={handleStartEdit}
+                handleDeleteEvent={handleDeleteEvent}
+                selectedDay={selectedDay}
+              />
             )}
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

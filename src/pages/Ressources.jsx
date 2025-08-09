@@ -156,7 +156,27 @@ export default function Ressources({ isAdmin = false }) {
                 </>
               )}
               {res.type === 'pdf' && (
-                <a href={res.data} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 16, color: '#007bff', textDecoration: 'underline', fontWeight: 500 }}>Voir PDF</a>
+                res.data.startsWith('data:application/pdf;base64,') ? (
+                  <button
+                    onClick={() => {
+                      const base64 = res.data.split(',')[1];
+                      const byteCharacters = atob(base64);
+                      const byteNumbers = new Array(byteCharacters.length);
+                      for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                      }
+                      const byteArray = new Uint8Array(byteNumbers);
+                      const blob = new Blob([byteArray], { type: 'application/pdf' });
+                      const blobUrl = URL.createObjectURL(blob);
+                      window.open(blobUrl, '_blank');
+                    }}
+                    style={{ marginLeft: 16, color: '#007bff', textDecoration: 'underline', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    Voir PDF
+                  </button>
+                ) : (
+                  <a href={res.data} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 16, color: '#007bff', textDecoration: 'underline', fontWeight: 500 }}>Voir PDF</a>
+                )
               )}
             </div>
             {isAdmin && (
