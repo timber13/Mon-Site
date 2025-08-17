@@ -45,32 +45,32 @@ const Scorers = () => {
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', background: 'white', borderRadius: 12, boxShadow: '0 4px 18px #c0020a33', padding: 32 }}>
       <h2 style={{ color: '#c00', textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 1.2 }}>Top Scorers</h2>
-      {topScorers.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#888' }}>Aucun essai enregistré pour l'instant.</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.08em' }}>
-          <thead>
-            <tr style={{ background: '#c00', color: 'white' }}>
-              <th style={{ padding: '10px 8px' }}>#</th>
-              <th style={{ padding: '10px 8px' }}>Prénom</th>
-              <th style={{ padding: '10px 8px' }}>Nom</th>
-              <th style={{ padding: '10px 8px' }}>Club</th>
-              <th style={{ padding: '10px 8px' }}>Essais</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topScorers.map((j, idx) => (
-              <tr key={j.club + '-' + j.nom + '-' + j.prenom} style={{ background: idx % 2 === 1 ? '#fff0f0' : 'white' }}>
-                <td style={{ padding: '8px', textAlign: 'center' }}>{idx + 1}</td>
-                <td style={{ padding: '8px', textAlign: 'center' }}>{j.prenom}</td>
-                <td style={{ padding: '8px', textAlign: 'center' }}>{j.nom}</td>
-                <td style={{ padding: '8px', textAlign: 'center' }}>{j.club}</td>
-                <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold', color: '#c00' }}>{j.essais}</td>
+        {topScorers.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#888' }}>No tries recorded yet.</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.08em' }}>
+            <thead>
+              <tr style={{ background: '#c00', color: 'white' }}>
+                <th style={{ padding: '10px 8px' }}>#</th>
+                <th style={{ padding: '10px 8px' }}>First Name</th>
+                <th style={{ padding: '10px 8px' }}>Last Name</th>
+                <th style={{ padding: '10px 8px' }}>Club</th>
+                <th style={{ padding: '10px 8px' }}>Tries</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {topScorers.map((j, idx) => (
+                <tr key={j.club + '-' + j.nom + '-' + j.prenom} style={{ background: idx % 2 === 1 ? '#fff0f0' : 'white' }}>
+                  <td style={{ padding: '8px', textAlign: 'center' }}>{idx + 1}</td>
+                  <td style={{ padding: '8px', textAlign: 'center' }}>{j.prenom}</td>
+                  <td style={{ padding: '8px', textAlign: 'center' }}>{j.nom}</td>
+                  <td style={{ padding: '8px', textAlign: 'center' }}>{j.club}</td>
+                  <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold', color: '#c00' }}>{j.essais}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
     </div>
   );
 };

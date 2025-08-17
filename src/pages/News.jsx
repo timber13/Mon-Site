@@ -102,14 +102,14 @@ export default function News({ isAdmin = false }) {
 
   return (
     <div style={{ maxWidth: 700, margin: 'auto', padding: 20 }}>
-      <h2 style={{ color: '#c00', textAlign: 'center', marginBottom: 20 }}> News </h2>
+  <h2 style={{ color: '#c00', textAlign: 'center', marginBottom: 20 }}>News</h2>
       {isAdmin && (
         <form onSubmit={handleAddPost} style={{ marginBottom: 30, background: '#f9f9f9', padding: 16, borderRadius: 8, boxShadow: '0 2px 8px #eee' }}>
-          <h3 style={{ marginTop: 0 }}>Ajouter un post</h3>
+          <h3 style={{ marginTop: 0 }}>Add a post</h3>
           <div style={{ marginBottom: 10 }}>
             <input
               type="text"
-              placeholder="Titre"
+              placeholder="Title"
               value={title}
               onChange={e => setTitle(e.target.value)}
               style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
@@ -117,7 +117,7 @@ export default function News({ isAdmin = false }) {
           </div>
           <div style={{ marginBottom: 10 }}>
             <textarea
-              placeholder="Texte"
+              placeholder="Text"
               value={text}
               onChange={e => setText(e.target.value)}
               style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', minHeight: 60 }}
@@ -126,7 +126,7 @@ export default function News({ isAdmin = false }) {
           <div style={{ marginBottom: 10 }}>
             <input
               type="url"
-              placeholder="Lien (https://...)"
+              placeholder="Link (https://...)"
               value={link}
               onChange={e => setLink(e.target.value)}
               style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
@@ -144,11 +144,11 @@ export default function News({ isAdmin = false }) {
             )}
           </div>
           {error && <div style={{ color: '#c00', marginBottom: 8 }}>{error}</div>}
-          <button type="submit" style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 4, padding: '8px 18px', fontWeight: 'bold', cursor: 'pointer' }}>Publier</button>
+          <button type="submit" style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 4, padding: '8px 18px', fontWeight: 'bold', cursor: 'pointer' }}>Publish</button>
         </form>
       )}
       {posts.length === 0 ? (
-        <p style={{ color: '#666', textAlign: 'center' }}>Aucun post publié pour l’instant.</p>
+        <p style={{ color: '#666', textAlign: 'center' }}>No post published yet.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {posts.map((post, idx) => (
@@ -159,20 +159,20 @@ export default function News({ isAdmin = false }) {
                     type="text"
                     value={editTitle}
                     onChange={e => setEditTitle(e.target.value)}
-                    placeholder="Titre"
+                    placeholder="Title"
                     style={{ width: '100%', marginBottom: 8, padding: 6, borderRadius: 4, border: '1px solid #ccc' }}
                   />
                   <textarea
                     value={editText}
                     onChange={e => setEditText(e.target.value)}
-                    placeholder="Texte"
+                    placeholder="Text"
                     style={{ width: '100%', marginBottom: 8, padding: 6, borderRadius: 4, border: '1px solid #ccc', minHeight: 50 }}
                   />
                   <input
                     type="url"
                     value={editLink}
                     onChange={e => setEditLink(e.target.value)}
-                    placeholder="Lien (https://...)"
+                    placeholder="Link (https://...)"
                     style={{ width: '100%', marginBottom: 8, padding: 6, borderRadius: 4, border: '1px solid #ccc' }}
                   />
                   <input
@@ -186,8 +186,8 @@ export default function News({ isAdmin = false }) {
                   )}
                   {editError && <div style={{ color: '#c00', marginBottom: 8 }}>{editError}</div>}
                   <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    <button onClick={() => handleSaveEdit(idx)} style={{ background: '#007bff', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Enregistrer</button>
-                    <button onClick={handleCancelEdit} style={{ background: '#888', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Annuler</button>
+                    <button onClick={() => handleSaveEdit(idx)} style={{ background: '#007bff', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Save</button>
+                    <button onClick={handleCancelEdit} style={{ background: '#888', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Cancel</button>
                   </div>
                 </div>
               ) : (
@@ -218,8 +218,8 @@ export default function News({ isAdmin = false }) {
                       )}
                       {isAdmin && (
                         <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-                          <button onClick={() => handleEditPost(idx)} style={{ background: '#ffb300', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Modifier</button>
-                          <button onClick={() => handleDeletePost(idx)} style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Supprimer</button>
+                          <button onClick={() => handleEditPost(idx)} style={{ background: '#ffb300', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Edit</button>
+                          <button onClick={() => handleDeletePost(idx)} style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 6, padding: '6px 16px', fontWeight: 'bold', fontSize: 15, cursor: 'pointer' }}>Delete</button>
                         </div>
                       )}
                     </div>

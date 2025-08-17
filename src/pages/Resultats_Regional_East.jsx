@@ -6,7 +6,7 @@ import { ResultatsContext } from '../contexts/ResultatsContext';
 import Fiche from '../components/Fiche';
 
 export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEast }) {
-  // Sauvegarde automatique dans localStorage à chaque changement
+  // Automatic save to localStorage on every change
   React.useEffect(() => {
     localStorage.setItem('resultatsData_regionalEast', JSON.stringify(tablesEast));
   }, [tablesEast]);
@@ -125,14 +125,14 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
       const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
       setTables([...nationals, ...west, ...updated]);
     } catch (err) {
-      alert("Erreur lors de l'importation du fichier. Assurez-vous que le format est correct.");
+      alert("Error importing file. Please make sure the format is correct.");
     }
     e.target.value = '';
   };
 
   // Reset handler
   const handleReset = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir réinitialiser les résultats Regional East ?')) {
+    if (window.confirm('Are you sure you want to reset Regional East results?')) {
       localStorage.removeItem('resultatsData_regionalEast');
       setTablesEast([]);
       // Merge all divisions for global context
@@ -147,16 +147,16 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
       {isAdmin && (
         <div style={{ display: 'flex', gap: '12px', marginBottom: 20 }}>
           <label style={{ background: '#c00', color: 'white', borderRadius: 4, padding: '6px 14px', cursor: 'pointer', fontWeight: 'bold' }}>
-            Importer
+            Import
             <input type="file" accept=".xlsx, .xls" style={{ display: 'none' }} multiple onChange={handleImport} />
           </label>
           <button style={{ background: '#c00', color: 'white', border: 'none', borderRadius: 4, padding: '6px 14px', cursor: 'pointer', fontWeight: 'bold' }} onClick={handleReset}>
-            Réinitialiser
+            Reset
           </button>
         </div>
       )}
       {tablesEast.length === 0
-        ? <p style={{ color: '#888' }}>No Result for Regional East</p>
+        ? <p style={{ color: '#888' }}>No results for Regional East</p>
         : tablesEast.map(({ title, data }, idx) => (
           <div key={idx} style={styles.container}>
             <div style={styles.titleContainer}>
@@ -172,17 +172,17 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
                     const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
                     setTables([...nationals, ...west, ...updated]);
                   }}
-                >🗑 Supprimer</button>
+                >🗑 Delete</button>
               )}
             </div>
             <table style={styles.table}>
               <thead style={styles.thead}>
                 <tr>
-                  <th style={styles.th}>Heure</th>
-                  <th style={styles.th}>Équipe 1</th>
+                  <th style={styles.th}>Time</th>
+                  <th style={styles.th}>Team 1</th>
                   <th style={styles.th}>Score</th>
-                  <th style={styles.th}>Équipe 2</th>
-                  <th style={styles.th}>Fiche</th>
+                  <th style={styles.th}>Team 2</th>
+                  <th style={styles.th}>Sheet</th>
                 </tr>
               </thead>
               <tbody style={styles.tbody}>
@@ -212,7 +212,7 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
                     <td style={{ ...styles.td, ...styles.teamCell(team2Win) }}>{row.team_2}</td>
                     <td style={styles.td}>
                       <button style={styles.ficheBtn} onClick={() => setSelectedMatch({ ...row })}>
-                        Fiche
+                        Sheet
                       </button>
                     </td>
                   </tr>

@@ -5,13 +5,13 @@ import ClassementRegionalWest from './Classement_Regional_West';
 import ClassementRegionalEast from './Classement_Regional_East';
 
 function getAllPosts() {
-  // Récupère et fusionne les posts Formation et News, triés par date de création (si dispo)
+  // Retrieves and merges Formation and News posts, sorted by creation date (if available)
   const formation = JSON.parse(localStorage.getItem('refereesFormationPosts') || '[]');
   const news = JSON.parse(localStorage.getItem('refereesNewsPosts') || '[]');
-  // On ajoute une source pour différencier
+  // Add a source to differentiate
   const fPosts = formation.map(p => ({ ...p, _source: 'Formation' }));
   const nPosts = news.map(p => ({ ...p, _source: 'News' }));
-  // Pas de date, donc on prend l'ordre d'ajout (plus récent en premier)
+  // No date, so we take the order of addition (most recent first)
   return [...fPosts, ...nPosts];
 }
 
@@ -45,7 +45,7 @@ export default function Home({ setActiveTabFromHome }) {
     }
   });
 
-  // Sync classements si localStorage change (autre onglet)
+  // Sync rankings if localStorage changes (other tab)
   useEffect(() => {
     const sync = () => {
       setPosts(getAllPosts());
@@ -59,7 +59,7 @@ export default function Home({ setActiveTabFromHome }) {
     return () => window.removeEventListener('storage', sync);
   }, []);
 
-  // Pour forcer le refresh si on revient sur la page
+  // Force refresh if returning to the page
   useEffect(() => {
     setPosts(getAllPosts());
     try {
@@ -70,7 +70,7 @@ export default function Home({ setActiveTabFromHome }) {
   }, []);
 
 
-  // Bloc classement à gauche avec flèches
+  // Ranking block on the left with arrows
   const classementTabs = [
     { label: 'Nationals', component: <ClassementNationals tablesNationals={tablesNationals} /> },
     { label: 'Regional West', component: <ClassementRegionalWest tablesWest={tablesWest} /> },
@@ -78,11 +78,11 @@ export default function Home({ setActiveTabFromHome }) {
   ];
 
 
-  // Gestion flèches
+  // Arrow management
   const handlePrev = () => setClassementTab((prev) => (prev === 0 ? 2 : prev - 1));
   const handleNext = () => setClassementTab((prev) => (prev === 2 ? 0 : prev + 1));
 
-  // Auto changement toutes les 5 secondes
+  // Auto change every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setClassementTab((prev) => (prev === 2 ? 0 : prev + 1));
@@ -92,7 +92,7 @@ export default function Home({ setActiveTabFromHome }) {
 
   return (
     <div style={{ width: '100%', minHeight: 320, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', background: 'none', gap: 36 }}>
-      {/* Bloc classement */}
+  {/* Ranking block */}
       <div style={{ minWidth: 460, maxWidth: 680, flex: 1, padding: '32px 0 32px 0', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
           <button
@@ -140,7 +140,7 @@ export default function Home({ setActiveTabFromHome }) {
         </div>
       </div>
 
-      {/* Colonne posts à droite */}
+  {/* Posts column on the right */}
       <aside style={{
         width: 370,
         minWidth: 270,
@@ -158,8 +158,8 @@ export default function Home({ setActiveTabFromHome }) {
         maxHeight: '70vh',
         overflowY: 'auto',
       }}>
-        <h2 style={{ color: '#c00', fontWeight: 700, fontSize: '1.25em', marginBottom: 12, letterSpacing: '0.04em' }}>Derniers posts</h2>
-        {posts.length === 0 && <div style={{ color: '#aaa', fontSize: 16 }}>Aucun post récent.</div>}
+  <h2 style={{ color: '#c00', fontWeight: 700, fontSize: '1.25em', marginBottom: 12, letterSpacing: '0.04em' }}>Latest posts</h2>
+  {posts.length === 0 && <div style={{ color: '#aaa', fontSize: 16 }}>No recent post.</div>}
         {posts.slice(0, 8).map((p, idx) => (
           <div
             key={idx}
@@ -168,16 +168,16 @@ export default function Home({ setActiveTabFromHome }) {
           >
             {p.image && <img src={p.image} alt={p.title || 'post'} style={{ width: 54, height: 54, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #c00', background: '#fff' }} />}
             <div style={{ flex: 1, textAlign: 'left' }}>
-              <div style={{ fontWeight: 700, color: '#c00', fontSize: 17, marginBottom: 2 }}>{p.title || <span style={{ color: '#aaa' }}>[Sans titre]</span>}</div>
+              <div style={{ fontWeight: 700, color: '#c00', fontSize: 17, marginBottom: 2 }}>{p.title || <span style={{ color: '#aaa' }}>[No title]</span>}</div>
               {p.text && <div style={{ color: '#222', fontSize: 15, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{p.text}</div>}
-              {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" style={{ color: '#c00', fontSize: 14, textDecoration: 'underline' }}>Lien</a>}
+              {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" style={{ color: '#c00', fontSize: 14, textDecoration: 'underline' }}>Link</a>}
               <div style={{ color: '#a00', fontSize: 13, marginTop: 2 }}>{p._source}</div>
             </div>
           </div>
         ))}
       </aside>
 
-      {/* Overlay post en grand */}
+  {/* Overlay post in large */}
       {selectedPost && (
         <div style={{
           position: 'fixed',
@@ -225,12 +225,12 @@ export default function Home({ setActiveTabFromHome }) {
                 zIndex: 10,
                 lineHeight: 1,
               }}
-              title="Fermer"
+              title="Close"
             >×</button>
             {selectedPost.image && <img src={selectedPost.image} alt={selectedPost.title || 'post'} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: '2.5px solid #c00', background: '#fff', marginBottom: 18 }} />}
-            <div style={{ fontWeight: 700, color: '#c00', fontSize: 26, marginBottom: 10, textAlign: 'center' }}>{selectedPost.title || <span style={{ color: '#aaa' }}>[Sans titre]</span>}</div>
+            <div style={{ fontWeight: 700, color: '#c00', fontSize: 26, marginBottom: 10, textAlign: 'center' }}>{selectedPost.title || <span style={{ color: '#aaa' }}>[No title]</span>}</div>
             {selectedPost.text && <div style={{ color: '#222', fontSize: 18, marginBottom: 10, textAlign: 'center', whiteSpace: 'pre-line' }}>{selectedPost.text}</div>}
-            {selectedPost.link && <a href={selectedPost.link} target="_blank" rel="noopener noreferrer" style={{ color: '#c00', fontSize: 17, textDecoration: 'underline', marginBottom: 8, display: 'block' }}>Lien</a>}
+            {selectedPost.link && <a href={selectedPost.link} target="_blank" rel="noopener noreferrer" style={{ color: '#c00', fontSize: 17, textDecoration: 'underline', marginBottom: 8, display: 'block' }}>Link</a>}
             <div style={{ color: '#a00', fontSize: 15, marginTop: 6 }}>{selectedPost._source}</div>
           </div>
         </div>

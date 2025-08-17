@@ -127,10 +127,10 @@ export default function ClassementRegionalWest({ tablesWest = [] }) {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Classement Regional West</h2>
+  <h2 style={styles.title}>Regional West Standings</h2>
       {getClassement(tablesWest).length === 0 ? (
         <p style={{ textAlign: "center", color: "#555" }}>
-          Aucun résultat disponible pour calculer le classement.
+          No results available to calculate the standings.
         </p>
       ) : (
         <table style={styles.table}>
@@ -182,19 +182,19 @@ export default function ClassementRegionalWest({ tablesWest = [] }) {
       )}
       {selectedTeam && (
         <div style={{ marginTop: 30, background: '#f9f9f9', borderRadius: 8, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
-          <h3 style={{ color: '#c00', marginTop: 0 }}>Matchs de {selectedTeam}</h3>
-          <button style={{ marginBottom: 15, background: '#c00', color: 'white', border: 'none', borderRadius: 4, padding: '6px 14px', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setSelectedTeam(null)}>Fermer</button>
+          <h3 style={{ color: '#c00', marginTop: 0 }}>Matches for {selectedTeam}</h3>
+          <button style={{ marginBottom: 15, background: '#c00', color: 'white', border: 'none', borderRadius: 4, padding: '6px 14px', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setSelectedTeam(null)}>Close</button>
           {getMatchsForTeam(selectedTeam).length === 0 ? (
-            <p>Aucun match trouvé pour cette équipe.</p>
+            <p>No match found for this team.</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10 }}>
               <thead>
                 <tr style={{ background: '#eee' }}>
-                  <th style={{ padding: '8px' }}>Lieu</th>
-                  <th style={{ padding: '8px' }}>Heure</th>
-                  <th style={{ padding: '8px' }}>Équipe 1</th>
+                  <th style={{ padding: '8px' }}>Location</th>
+                  <th style={{ padding: '8px' }}>Time</th>
+                  <th style={{ padding: '8px' }}>Team 1</th>
                   <th style={{ padding: '8px' }}>Score</th>
-                  <th style={{ padding: '8px' }}>Équipe 2</th>
+                  <th style={{ padding: '8px' }}>Team 2</th>
                 </tr>
               </thead>
               <tbody>

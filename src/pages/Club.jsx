@@ -481,10 +481,10 @@ export default function Club() {
             alignSelf: 'flex-end'
           }}
           onClick={() => setShowModal(true)}
-        >Ajouter club</button>
+        >Add club</button>
       )}
 
-      {/* Liste des clubs ajoutés */}
+      {/* List of added clubs */}
       {clubs.length > 0 && (
         <div style={{
           width: '100%',
@@ -528,8 +528,8 @@ export default function Club() {
         </div>
       )}
 
-      {/* Modale flottante */}
-      {showModal && (
+  {/* Floating modal */}
+  {showModal && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -569,7 +569,7 @@ export default function Club() {
               fontWeight: 700,
               zIndex: 2,
             }}>×</button>
-            <h2 style={{ fontFamily: 'Oswald, Arial Black, Arial, sans-serif', color: '#c00', marginBottom: 18, fontSize: 26 }}>Ajouter un club</h2>
+            <h2 style={{ fontFamily: 'Oswald, Arial Black, Arial, sans-serif', color: '#c00', marginBottom: 18, fontSize: 26 }}>Add a club</h2>
             <input
               type="file"
               accept="image/*"
@@ -579,7 +579,7 @@ export default function Club() {
             />
             <input
               type="text"
-              placeholder="Nom du club"
+              placeholder="Club name"
               value={clubName}
               onChange={e => setClubName(e.target.value)}
               style={{
@@ -593,7 +593,7 @@ export default function Club() {
             />
             <input
               type="text"
-              placeholder="Ville"
+              placeholder="City"
               value={clubCity}
               onChange={e => setClubCity(e.target.value)}
               style={{
@@ -606,7 +606,7 @@ export default function Club() {
               }}
             />
             <textarea
-              placeholder="Texte de présentation"
+              placeholder="Description"
               value={clubDescription}
               onChange={e => setClubDescription(e.target.value)}
               style={{
@@ -622,7 +622,7 @@ export default function Club() {
             />
             <input
               type="url"
-              placeholder="Lien du site du club (https://...)"
+              placeholder="Club website link (https://...)"
               value={clubLink}
               onChange={e => setClubLink(e.target.value)}
               style={{
@@ -636,7 +636,7 @@ export default function Club() {
             />
             <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <label htmlFor="color1" style={{ fontSize: 14, marginBottom: 4 }}>Couleur principale</label>
+                <label htmlFor="color1" style={{ fontSize: 14, marginBottom: 4 }}>Main color</label>
                 <input
                   id="color1"
                   type="color"
@@ -646,7 +646,7 @@ export default function Club() {
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <label htmlFor="color2" style={{ fontSize: 14, marginBottom: 4 }}>Couleur secondaire</label>
+                <label htmlFor="color2" style={{ fontSize: 14, marginBottom: 4 }}>Secondary color</label>
                 <input
                   id="color2"
                   type="color"
@@ -671,12 +671,12 @@ export default function Club() {
               }}
               onClick={handleAddClub}
               disabled={!clubName.trim() || !clubCity.trim()}
-            >Ajouter</button>
+            >Add</button>
           </div>
         </div>
       )}
 
-      {/* Message si aucun club */}
+      {/* Message if no club */}
       {clubs.length === 0 && (
         <div style={{
           width: '100%',

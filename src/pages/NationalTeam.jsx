@@ -155,7 +155,7 @@ export default function NationalTeam() {
 
   return (
     <div style={{ padding: 48, fontFamily: 'Oswald, Arial Black, Arial, sans-serif', color: '#c00', fontSize: 32 }}>
-      <h1 style={{ marginBottom: 24 }}>National Team</h1>
+  <h1 style={{ marginBottom: 24 }}>National Team</h1>
       <nav style={{
         display: 'flex',
         justifyContent: 'center',
@@ -198,7 +198,7 @@ export default function NationalTeam() {
                 {isAdmin && (
                   <div style={{ display: 'flex', gap: 16, marginBottom: 10 }}>
                     <div>
-                      <label htmlFor="swiss-font-select" style={{ fontWeight: 700, color: '#c00', fontSize: 15, marginRight: 8 }}>Police :</label>
+                      <label htmlFor="swiss-font-select" style={{ fontWeight: 700, color: '#c00', fontSize: 15, marginRight: 8 }}>Font :</label>
                       <select id="swiss-font-select" value={swissFontFamily} onChange={handleSwissFontChange} style={{ fontSize: 15, padding: '6px 18px', borderRadius: 8, border: '1.5px solid #c00', fontFamily: swissFontFamily }}>
                         {fontOptions.map(opt => (
                           <option key={opt.value} value={opt.value} style={{ fontFamily: opt.value }}>{opt.label}</option>
@@ -206,7 +206,7 @@ export default function NationalTeam() {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="swiss-size-select" style={{ fontWeight: 700, color: '#c00', fontSize: 15, marginRight: 8 }}>Taille :</label>
+                      <label htmlFor="swiss-size-select" style={{ fontWeight: 700, color: '#c00', fontSize: 15, marginRight: 8 }}>Size :</label>
                       <select id="swiss-size-select" value={swissFontSize} onChange={handleSwissSizeChange} style={{ fontSize: 15, padding: '6px 18px', borderRadius: 8, border: '1.5px solid #c00' }}>
                         {sizeOptions.map(size => (
                           <option key={size} value={size}>{size}px</option>
@@ -279,7 +279,7 @@ export default function NationalTeam() {
             </nav>
             <div style={{ flex: 1, padding: '12px 0 12px 0' }}>
               <h2 style={{ color: '#c00', fontSize: 28, marginBottom: 18 }}>{selectedComp}</h2>
-              {/* Liste des équipes pour la compétition sélectionnée */}
+              {/* List of teams for the selected competition */}
               {competitionTeams[selectedComp] && competitionTeams[selectedComp].length > 0 && (
                 <ul style={{ marginBottom: 18 }}>
                   {competitionTeams[selectedComp].map((team, idx) => (
@@ -292,24 +292,24 @@ export default function NationalTeam() {
                   ))}
                 </ul>
               )}
-              {/* Formulaire admin pour ajouter une équipe */}
+              {/* Admin form to add a team */}
               {isAdmin && (
                 <form onSubmit={handleAddTeam} style={{ display: 'flex', gap: 12, marginBottom: 18, alignItems: 'center' }}>
                   <input
                     type="text"
                     value={teamName}
                     onChange={e => setTeamName(e.target.value)}
-                    placeholder="Nom de l'équipe"
+                    placeholder="Team name"
                     style={{ fontSize: 16, padding: '6px 12px', borderRadius: 8, border: '1.5px solid #c00', minWidth: 120 }}
                   />
                   <input
                     type="url"
                     value={teamLink}
                     onChange={e => setTeamLink(e.target.value)}
-                    placeholder="Lien vers les résultats"
+                    placeholder="Results link"
                     style={{ fontSize: 16, padding: '6px 12px', borderRadius: 8, border: '1.5px solid #c00', minWidth: 180 }}
                   />
-                  <button type="submit" style={{ background: '#c00', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>Ajouter</button>
+                  <button type="submit" style={{ background: '#c00', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>Add</button>
                 </form>
               )}
               <p style={{ fontSize: 18, color: '#222' }}>Details and results for {selectedComp} will appear here.</p>

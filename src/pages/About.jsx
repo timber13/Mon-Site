@@ -64,7 +64,7 @@ export default function About() {
 
   return (
     <div style={aboutContainerStyle}>
-      <h1 style={{ color: '#c00', fontSize: 36, marginBottom: 24, fontFamily: 'Oswald, Arial Black, Arial, sans-serif', textTransform: 'uppercase', letterSpacing: '0.04em', marginLeft: 48 }}>About</h1>
+  <h1 style={{ color: '#c00', fontSize: 36, marginBottom: 24, fontFamily: 'Oswald, Arial Black, Arial, sans-serif', textTransform: 'uppercase', letterSpacing: '0.04em', marginLeft: 48 }}>About</h1>
       <nav style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'none', border: 'none', boxShadow: 'none', fontFamily: 'Oswald, Arial Black, Arial, sans-serif', textTransform: 'uppercase', letterSpacing: '0.04em', minHeight: 64, gap: 0, borderRadius: '16px 16px 0 0', borderBottom: '1.5px solid #f8d7da' }}>
         {tabs.map(tab => (
           <button
