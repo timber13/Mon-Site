@@ -18,8 +18,15 @@ import Home from './pages/Home';
 import SwissCup from './pages/SwissCup';
 import Club from './pages/Club';
 import { AdminContext } from './contexts/AdminContext';
+import './i18n';
+import { useTranslation } from 'react-i18next';
+import Language from './components/Language';
 
 function App() {
+  const { i18n } = useTranslation();
+  const [currentLang, setCurrentLang] = useState(localStorage.getItem('siteLang') || 'en');
+  useEffect(() => { localStorage.setItem('siteLang', currentLang); }, [currentLang]);
+  useEffect(() => { i18n.changeLanguage(currentLang); }, [currentLang, i18n]);
   // Fonctions d'admin pour le panneau d'authentification
   const handleAdminLogin = () => {
     const email = adminEmail.trim().toLowerCase();
@@ -59,6 +66,41 @@ function App() {
     setTimeout(() => setAdminError(''), 2000);
   };
   const [activeTab, setActiveTab] = useState('home');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const searchKeywords = {
+    home: ['home', 'accueil', 'main'],
+    about: ['about', 'info', 'information', 'association'],
+    club: ['club', 'team', 'teams', 'local'],
+    swisscup: ['swiss', 'cup', 'swisscup', 'standings', 'results'],
+    matchs: ['calendar', 'match', 'matches', 'game', 'games', 'schedule'],
+    nationalteam: ['national', 'national team', 'switzerland', 'selection'],
+    referees: ['referee', 'referees', 'arbitre', 'arbitres', 'officials'],
+    photos: ['photo', 'photos', 'gallery', 'media'],
+    admin: ['admin', 'administrator', 'login', 'panel']
+  };
+
+  const handleSearch = (q) => {
+    setSearchQuery(q);
+    const query = q.toLowerCase().trim();
+    if (!query) return; // don't change tab on empty
+    // Score each tab by number of keyword matches (substring)
+    let best = { key: activeTab, score: 0 };
+    Object.entries(searchKeywords).forEach(([key, words]) => {
+      let score = 0;
+      words.forEach(w => {
+        if (query.includes(w)) score += w.length; // weight longer matches
+      });
+      // Fallback: partial first 3 chars
+      if (score === 0) {
+        words.forEach(w => {
+          if (w.startsWith(query) || query.startsWith(w)) score += 1;
+        });
+      }
+      if (score > best.score) best = { key, score };
+    });
+    if (best.score > 0 && best.key !== activeTab) setActiveTab(best.key);
+  };
 
   // --- Admin state ---
   const allowedAdmins = ['admin@touch.ch','orga@touch.ch','timothee@touch.ch','contact@touch.ch'];
@@ -104,7 +146,14 @@ function App() {
             }}
           >
             <div style={{ width: '100%', maxWidth: 1400, minWidth: 0 }}>
-              <Menu activeTab={activeTab} setActiveTab={setActiveTab} onAdminClick={() => setShowLogin(true)} />
+              <Menu
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                onAdminClick={() => setShowLogin(true)}
+                onSearch={handleSearch}
+                searchKeywords={searchKeywords}
+              />
+              <Language currentLang={currentLang} setLang={setCurrentLang} />
             </div>
 
             {/* Admin Panel en superposition */}

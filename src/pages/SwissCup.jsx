@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import ResultatsNationals from './Resultats_Nationals';
 import ClassementNationals from './Classement_Nationals';
 import ResultatsRegionalWest from './Resultats_Regional_West';
@@ -9,6 +10,7 @@ import Scorers from './Scorers';
 
 
 export default function SwissCup(props) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(props.initialTab || 'nationals');
   const [tablesNationals, setTablesNationals] = useState(() => {
     const saved = localStorage.getItem('resultatsData_nationals');
@@ -51,10 +53,10 @@ export default function SwissCup(props) {
 
   // Onglet Nationals réactivé
   const tabs = [
-    { key: 'nationals', label: 'Nationals' },
-    { key: 'regionalWest', label: 'Regional West' },
-    { key: 'regionalEast', label: 'Regional East' },
-    { key: 'topscorer', label: 'Topscorer'},
+    { key: 'nationals', label: t('swisscup.nationals') },
+    { key: 'regionalWest', label: t('swisscup.regionalWest') },
+    { key: 'regionalEast', label: t('swisscup.regionalEast') },
+    { key: 'topscorer', label: t('swisscup.topscorer')},
   ];
 
   const tabBtnStyle = (active) => ({

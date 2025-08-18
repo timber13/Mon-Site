@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import ClassementNationals from './Classement_Nationals';
 import ClassementRegionalWest from './Classement_Regional_West';
 import ClassementRegionalEast from './Classement_Regional_East';
@@ -18,6 +19,7 @@ function getAllPosts() {
 
 
 export default function Home({ setActiveTabFromHome }) {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState(getAllPosts());
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -72,9 +74,9 @@ export default function Home({ setActiveTabFromHome }) {
 
   // Ranking block on the left with arrows
   const classementTabs = [
-    { label: 'Nationals', component: <ClassementNationals tablesNationals={tablesNationals} /> },
-    { label: 'Regional West', component: <ClassementRegionalWest tablesWest={tablesWest} /> },
-    { label: 'Regional East', component: <ClassementRegionalEast tablesEast={tablesEast} /> },
+    { label: t('home.nationals'), component: <ClassementNationals tablesNationals={tablesNationals} /> },
+    { label: t('home.regionalWest'), component: <ClassementRegionalWest tablesWest={tablesWest} /> },
+    { label: t('home.regionalEast'), component: <ClassementRegionalEast tablesEast={tablesEast} /> },
   ];
 
 
@@ -158,8 +160,8 @@ export default function Home({ setActiveTabFromHome }) {
         maxHeight: '70vh',
         overflowY: 'auto',
       }}>
-  <h2 style={{ color: '#c00', fontWeight: 700, fontSize: '1.25em', marginBottom: 12, letterSpacing: '0.04em' }}>Latest posts</h2>
-  {posts.length === 0 && <div style={{ color: '#aaa', fontSize: 16 }}>No recent post.</div>}
+  <h2 style={{ color: '#c00', fontWeight: 700, fontSize: '1.25em', marginBottom: 12, letterSpacing: '0.04em' }}>{t('home.latestPosts')}</h2>
+  {posts.length === 0 && <div style={{ color: '#aaa', fontSize: 16 }}>{t('home.noRecentPost')}</div>}
         {posts.slice(0, 8).map((p, idx) => (
           <div
             key={idx}
@@ -168,7 +170,7 @@ export default function Home({ setActiveTabFromHome }) {
           >
             {p.image && <img src={p.image} alt={p.title || 'post'} style={{ width: 54, height: 54, objectFit: 'cover', borderRadius: 8, border: '1.5px solid #c00', background: '#fff' }} />}
             <div style={{ flex: 1, textAlign: 'left' }}>
-              <div style={{ fontWeight: 700, color: '#c00', fontSize: 17, marginBottom: 2 }}>{p.title || <span style={{ color: '#aaa' }}>[No title]</span>}</div>
+              <div style={{ fontWeight: 700, color: '#c00', fontSize: 17, marginBottom: 2 }}>{p.title || <span style={{ color: '#aaa' }}>{t('home.noTitle')}</span>}</div>
               {p.text && <div style={{ color: '#222', fontSize: 15, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{p.text}</div>}
               {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" style={{ color: '#c00', fontSize: 14, textDecoration: 'underline' }}>Link</a>}
               <div style={{ color: '#a00', fontSize: 13, marginTop: 2 }}>{p._source}</div>
@@ -228,7 +230,7 @@ export default function Home({ setActiveTabFromHome }) {
               title="Close"
             >×</button>
             {selectedPost.image && <img src={selectedPost.image} alt={selectedPost.title || 'post'} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: '2.5px solid #c00', background: '#fff', marginBottom: 18 }} />}
-            <div style={{ fontWeight: 700, color: '#c00', fontSize: 26, marginBottom: 10, textAlign: 'center' }}>{selectedPost.title || <span style={{ color: '#aaa' }}>[No title]</span>}</div>
+            <div style={{ fontWeight: 700, color: '#c00', fontSize: 26, marginBottom: 10, textAlign: 'center' }}>{selectedPost.title || <span style={{ color: '#aaa' }}>{t('home.noTitle')}</span>}</div>
             {selectedPost.text && <div style={{ color: '#222', fontSize: 18, marginBottom: 10, textAlign: 'center', whiteSpace: 'pre-line' }}>{selectedPost.text}</div>}
             {selectedPost.link && <a href={selectedPost.link} target="_blank" rel="noopener noreferrer" style={{ color: '#c00', fontSize: 17, textDecoration: 'underline', marginBottom: 8, display: 'block' }}>Link</a>}
             <div style={{ color: '#a00', fontSize: 15, marginTop: 6 }}>{selectedPost._source}</div>

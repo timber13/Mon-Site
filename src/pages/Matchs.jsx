@@ -1,8 +1,10 @@
 
 // Composant Matchs : affichage placeholder pour la section matchs
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function Matchs() {
+  const { t } = useTranslation();
   // Style principal du bloc matchs
   const style = {
     background: 'rgba(255,255,255,0.98)',
@@ -27,7 +29,7 @@ export default function Matchs() {
   // Rendu principal
   return (
     <div style={style}>
-      🏉 Match (prochains matchs à afficher ici)
+      {t('matchs.placeholder')}
     </div>
   );
 }

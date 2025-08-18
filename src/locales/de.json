@@ -1,0 +1,14 @@
+{
+  "menu": {
+    "home": "Startseite",
+    "about": "Über uns",
+    "club": "Verein",
+    "swisscup": "Schweizer Cup",
+    "matchs": "Kalender",
+    "nationalteam": "Nationalmannschaft",
+    "referees": "Schiedsrichter",
+    "photos": "Fotos",
+    "admin": "Admin"
+  },
+  "language": "Sprache"
+}

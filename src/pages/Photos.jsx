@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function Photos({ isAdmin, adminEmail }) {
   const [photos, setPhotos] = useState([]);
@@ -15,30 +16,9 @@ export default function Photos({ isAdmin, adminEmail }) {
     localStorage.setItem('photos', JSON.stringify(photos));
   }, [photos]);
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    const readers = files.map((file) => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    Promise.all(readers).then((newBase64Photos) => {
-      setPhotos((prev) => [...prev, ...newBase64Photos]);
-    });
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click(); // Ouvre le sélecteur de fichier
-    }
-  };
-
   return (
     <div style={{ padding: '16px' }}>
-      <h2 style={{ color: '#c00' }}>Galerie Photos</h2>
+      <h2 style={{ color: '#c00' }}>{t('photos.galleryTitle')}</h2>
 
       {isAdmin && (
         <div style={{ marginBottom: '16px' }}>
@@ -58,17 +38,19 @@ export default function Photos({ isAdmin, adminEmail }) {
               padding: '10px 20px',
               border: 'none',
               borderRadius: '8px',
-              cursor: 'pointer',
               fontWeight: 'bold',
+              fontSize: '1em',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px #c0020a22',
             }}
           >
-            + Ajouter des photos
+            {t('photos.addPhotos')}
           </button>
         </div>
       )}
 
       {photos.length === 0 ? (
-        <p style={{ color: '#666' }}>Aucune photo ajoutée pour l’instant.</p>
+        <p style={{ color: '#666' }}>{t('photos.noPhotos')}</p>
       ) : (
         <div
           style={{
@@ -94,7 +76,7 @@ export default function Photos({ isAdmin, adminEmail }) {
               {isAdmin && (
                 <button
                   onClick={() => {
-                    if (window.confirm('Supprimer cette photo ?')) {
+                    if (window.confirm(t('photos.deleteConfirm'))) {
                       setPhotos(photos.filter((_, i) => i !== idx));
                     }
                   }}
@@ -113,7 +95,7 @@ export default function Photos({ isAdmin, adminEmail }) {
                     fontSize: 18,
                     boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
                   }}
-                  title="Supprimer la photo"
+                  title={t('photos.deletePhoto')}
                 >
                   ×
                 </button>

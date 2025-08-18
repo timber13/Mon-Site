@@ -1,8 +1,10 @@
 
 import React, { useState, useRef, useContext, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AdminContext } from '../contexts/AdminContext';
 
 export default function Club() {
+  const { t } = useTranslation();
   const isAdmin = useContext(AdminContext);
   const [showModal, setShowModal] = useState(false);
   const [clubs, setClubs] = useState(() => {
@@ -463,7 +465,7 @@ export default function Club() {
         zIndex: 10,
         fontFamily: 'Oswald, Arial Black, Arial, sans-serif',
       }}>
-         Clubs in Switzerland
+         {t('club.title')}
       </div>
       {isAdmin && (
         <button
@@ -481,7 +483,7 @@ export default function Club() {
             alignSelf: 'flex-end'
           }}
           onClick={() => setShowModal(true)}
-        >Add club</button>
+  >{t('club.addClub')}</button>
       )}
 
       {/* List of added clubs */}
@@ -569,7 +571,7 @@ export default function Club() {
               fontWeight: 700,
               zIndex: 2,
             }}>×</button>
-            <h2 style={{ fontFamily: 'Oswald, Arial Black, Arial, sans-serif', color: '#c00', marginBottom: 18, fontSize: 26 }}>Add a club</h2>
+            <h2 style={{ fontFamily: 'Oswald, Arial Black, Arial, sans-serif', color: '#c00', marginBottom: 18, fontSize: 26 }}>{t('club.addClubTitle')}</h2>
             <input
               type="file"
               accept="image/*"
@@ -579,7 +581,7 @@ export default function Club() {
             />
             <input
               type="text"
-              placeholder="Club name"
+              placeholder={t('club.namePlaceholder')}
               value={clubName}
               onChange={e => setClubName(e.target.value)}
               style={{
@@ -593,7 +595,7 @@ export default function Club() {
             />
             <input
               type="text"
-              placeholder="City"
+              placeholder={t('club.cityPlaceholder')}
               value={clubCity}
               onChange={e => setClubCity(e.target.value)}
               style={{
@@ -606,7 +608,7 @@ export default function Club() {
               }}
             />
             <textarea
-              placeholder="Description"
+              placeholder={t('club.descriptionPlaceholder')}
               value={clubDescription}
               onChange={e => setClubDescription(e.target.value)}
               style={{
@@ -622,7 +624,7 @@ export default function Club() {
             />
             <input
               type="url"
-              placeholder="Club website link (https://...)"
+              placeholder={t('club.linkPlaceholder')}
               value={clubLink}
               onChange={e => setClubLink(e.target.value)}
               style={{
@@ -636,7 +638,7 @@ export default function Club() {
             />
             <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <label htmlFor="color1" style={{ fontSize: 14, marginBottom: 4 }}>Main color</label>
+                <label htmlFor="color1" style={{ fontSize: 14, marginBottom: 4 }}>{t('club.mainColor')}</label>
                 <input
                   id="color1"
                   type="color"
@@ -646,7 +648,7 @@ export default function Club() {
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <label htmlFor="color2" style={{ fontSize: 14, marginBottom: 4 }}>Secondary color</label>
+                <label htmlFor="color2" style={{ fontSize: 14, marginBottom: 4 }}>{t('club.secondaryColor')}</label>
                 <input
                   id="color2"
                   type="color"
@@ -671,7 +673,7 @@ export default function Club() {
               }}
               onClick={handleAddClub}
               disabled={!clubName.trim() || !clubCity.trim()}
-            >Add</button>
+            >{t('club.add')}</button>
           </div>
         </div>
       )}
@@ -689,7 +691,7 @@ export default function Club() {
           fontWeight: 700,
           letterSpacing: 1
         }}>
-          Under construction
+          {t('club.underConstruction')}
         </div>
       )}
     </div>

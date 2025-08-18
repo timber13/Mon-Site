@@ -1,0 +1,14 @@
+{
+  "menu": {
+    "home": "Home",
+    "about": "About",
+    "club": "Club",
+    "swisscup": "SwissCup",
+    "matchs": "Calendar",
+    "nationalteam": "National Team",
+    "referees": "Referees",
+    "photos": "Photos",
+    "admin": "Admin"
+  },
+  "language": "Language"
+}

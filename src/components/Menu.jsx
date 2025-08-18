@@ -1,8 +1,53 @@
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 
-export default function Menu({ activeTab, setActiveTab, onAdminClick }) {
+export default function Menu({ activeTab, setActiveTab, onAdminClick, onSearch, searchKeywords }) {
+  const { t } = useTranslation();
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [highlightIdx, setHighlightIdx] = useState(0);
+  const wrapperRef = useRef(null);
+
+  const flatSuggestions = React.useMemo(() => {
+    if (!searchKeywords) return [];
+    const arr = [];
+    Object.entries(searchKeywords).forEach(([tab, words]) => {
+      words.forEach(w => arr.push({ word: w, tab }));
+    });
+    return arr;
+  }, [searchKeywords]);
+
+  const filtered = React.useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+    return flatSuggestions
+      .filter(s => s.word.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [query, flatSuggestions]);
+
+  useEffect(() => {
+    if (filtered.length === 0) setHighlightIdx(0);
+    else if (highlightIdx >= filtered.length) setHighlightIdx(0);
+  }, [filtered, highlightIdx]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const commitSelection = (item) => {
+    setOpen(false);
+    setQuery(item.word);
+    if (onSearch) onSearch(item.word);
+    if (item.tab) setActiveTab(item.tab);
+  };
   const tabs = [
     { key: 'home', label: (
       <span style={{ filter: 'drop-shadow(0 0 2px #fff)', color: '#fff', fontSize: '1.35em', lineHeight: 1, display: 'inline-block' }}>
@@ -13,18 +58,18 @@ export default function Menu({ activeTab, setActiveTab, onAdminClick }) {
         </svg>
       </span>
     ) },
-    { key: 'about', label: 'About' },
-    { key: 'club', label: 'Club' },
-    { key: 'swisscup', label: 'SwissCup' },
-    { key: 'matchs', label: 'Calendar' },
-    { key: 'nationalteam', label: 'National Team' },
-    { key: 'referees', label: 'Referees' },
-    { key: 'photos', label: 'Photos' },
-    { key: 'admin', label: 'Admin' },
+    { key: 'about', label: t('menu.about') },
+    { key: 'club', label: t('menu.club') },
+    { key: 'swisscup', label: t('menu.swisscup') },
+    { key: 'matchs', label: t('menu.matchs') },
+    { key: 'nationalteam', label: t('menu.nationalteam') },
+    { key: 'referees', label: t('menu.referees') },
+    { key: 'photos', label: t('menu.photos') },
+    { key: 'admin', label: t('menu.admin') },
   ];
 
   return (
-    <header className="menu-bar" style={{
+  <header className="menu-bar" style={{
       width: '100vw',
       minWidth: '100vw',
       left: 0,
@@ -49,8 +94,8 @@ export default function Menu({ activeTab, setActiveTab, onAdminClick }) {
       <nav
         style={{
           display: 'flex',
-      justifyContent: 'flex-end',
-      paddingRight: '24px',
+          justifyContent: 'flex-end',
+          paddingRight: '24px',
           alignItems: 'center',
           height: '100%',
           background: 'none',
@@ -63,6 +108,85 @@ export default function Menu({ activeTab, setActiveTab, onAdminClick }) {
           gap: 0,
         }}
       >
+        <div ref={wrapperRef} style={{ position: 'relative', marginRight: 18 }}>
+          <input
+            type="text"
+            value={query}
+            placeholder="Search..."
+            onFocus={() => setOpen(true)}
+            onChange={e => {
+              const v = e.target.value;
+              setQuery(v);
+              if (onSearch) onSearch(v);
+              setOpen(true);
+            }}
+            onKeyDown={e => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setHighlightIdx(i => (i + 1) % Math.max(filtered.length, 1));
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setHighlightIdx(i => (i - 1 + Math.max(filtered.length, 1)) % Math.max(filtered.length, 1));
+              } else if (e.key === 'Enter') {
+                if (filtered[highlightIdx]) commitSelection(filtered[highlightIdx]);
+              } else if (e.key === 'Escape') {
+                setOpen(false);
+              }
+            }}
+            style={{
+              padding: '8px 14px',
+              borderRadius: 6,
+              border: '1.5px solid #e30613',
+              fontSize: '1em',
+              fontFamily: 'inherit',
+              outline: 'none',
+              minWidth: 200,
+              background: '#fff',
+              color: '#c00',
+              boxShadow: '0 2px 8px #e3061322',
+            }}
+          />
+          {open && filtered.length > 0 && (
+            <ul style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              width: '100%',
+              background: '#fff',
+              border: '1px solid #e30613',
+              borderRadius: 6,
+              margin: 0,
+              padding: '4px 0',
+              listStyle: 'none',
+              boxShadow: '0 6px 18px #c0020a33',
+              zIndex: 3000,
+              maxHeight: 260,
+              overflowY: 'auto',
+            }}>
+              {filtered.map((item, idx) => (
+                <li
+                  key={item.word + idx}
+                  onMouseDown={e => { e.preventDefault(); commitSelection(item); }}
+                  onMouseEnter={() => setHighlightIdx(idx)}
+                  style={{
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    background: idx === highlightIdx ? '#e30613' : 'transparent',
+                    color: idx === highlightIdx ? '#fff' : '#c00',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '0.9em',
+                    fontWeight: 600,
+                  }}
+                >
+                  <span>{item.word}</span>
+                  <span style={{ fontSize: '0.7em', opacity: 0.7, marginLeft: 10 }}>{item.tab}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         {tabs.map((tab, idx) => {
           if (tab.key === 'admin') {
             return (
