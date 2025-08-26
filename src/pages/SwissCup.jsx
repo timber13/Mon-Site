@@ -53,10 +53,10 @@ export default function SwissCup(props) {
 
   // Onglet Nationals réactivé
   const tabs = [
-    { key: 'nationals', label: t('swisscup.nationals') },
-    { key: 'regionalWest', label: t('swisscup.regionalWest') },
-    { key: 'regionalEast', label: t('swisscup.regionalEast') },
-    { key: 'topscorer', label: t('swisscup.topscorer')},
+    { key: 'nationals', label: t('National') },
+    { key: 'regionalWest', label: t('Regional West') },
+    { key: 'regionalEast', label: t('Regional East') },
+    { key: 'topscorer', label: t('Top Scorer') },
   ];
 
   const tabBtnStyle = (active) => ({

@@ -1,20 +1,48 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function Photos({ isAdmin, adminEmail }) {
-  const [photos, setPhotos] = useState([]);
-  const fileInputRef = useRef(null); // Référence au champ fichier
 
-  // Charger les photos depuis localStorage au chargement
+export default function Photos({ isAdmin, adminEmail }) {
+  const { t } = useTranslation();
+  const [photos, setPhotos] = useState([]);
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     const storedPhotos = JSON.parse(localStorage.getItem('photos')) || [];
     setPhotos(storedPhotos);
   }, []);
 
-  // Enregistrer dans localStorage à chaque mise à jour
   useEffect(() => {
     localStorage.setItem('photos', JSON.stringify(photos));
   }, [photos]);
+
+  // Trigger file input dialog
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null; // reset
+      fileInputRef.current.click();
+    }
+  };
+
+  // Handle file upload
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    // Read each file as DataURL
+    Promise.all(
+      files.map(file => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      })
+    ).then(imgs => {
+      setPhotos(prev => [...prev, ...imgs]);
+    });
+  };
 
   return (
     <div style={{ padding: '16px' }}>
