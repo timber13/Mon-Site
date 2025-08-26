@@ -101,7 +101,7 @@ export default function Menu({ activeTab, setActiveTab, onAdminClick, onSearch, 
         {customLogo ? (
           <img src={customLogo} alt="logo" style={{ height: 30, width: 48, objectFit: 'contain', borderRadius: 12, boxShadow: '0 2px 12px #e30613', background: '#e30613' }} />
         ) : (
-          <LogoTS size={48} />
+          <LogoTS size={24} />
         )}
         {isAdmin && (
           <label htmlFor="logo-upload" style={{ position: 'absolute', bottom: 0, left: 160, cursor: 'pointer', background: '#fff', borderRadius: 6, padding: '2px 8px', fontSize: 12, color: '#c00', boxShadow: '0 2px 8px #a00a', marginLeft: 0 }}>
