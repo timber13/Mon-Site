@@ -99,7 +99,7 @@ export default function Menu({ activeTab, setActiveTab, onAdminClick, onSearch, 
         position: 'relative',
       }}>
         {customLogo ? (
-          <img src={customLogo} alt="logo" style={{ height: 50, width: 96, objectFit: 'contain', borderRadius: 12, boxShadow: '0 2px 12px #e30613', background: '#e30613' }} />
+          <img src={customLogo} alt="logo" style={{ height: 30, width: 48, objectFit: 'contain', borderRadius: 12, boxShadow: '0 2px 12px #e30613', background: '#e30613' }} />
         ) : (
           <LogoTS size={48} />
         )}
