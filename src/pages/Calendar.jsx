@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase/client';
 import NextEventsColumn from '../components/NextEventsColumn';
 import { AddEventModal, EditEventForm } from '../components/EventModals';
 
@@ -14,30 +15,6 @@ function getDaysInMonth(year, month) {
 export default function Calendar({ isAdmin = true }) {
   const [filterTag, setFilterTag] = useState('');
   const today = new Date();
-  // Exemple d'événements (clé: yyyy-mm-dd, valeur: tableau d'événements)
-  // Chargement des événements depuis localStorage ou valeur initiale
-  // Migration automatique des anciens événements (tag:string) vers tags:array
-  const getInitialEvents = () => {
-    try {
-      const stored = localStorage.getItem('calendarEvents');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        Object.keys(parsed).forEach(dateKey => {
-          parsed[dateKey] = parsed[dateKey].map(ev => {
-            if (Array.isArray(ev.tags)) return ev;
-            if (typeof ev.tag === 'string' && ev.tag.trim() !== '') {
-              return { ...ev, tags: ev.tag.split(',').map(t => t.trim()).filter(Boolean), tag: undefined };
-            }
-            return { ...ev, tags: [] };
-          });
-        });
-        return parsed;
-      }
-    } catch (e) {
-      // Si données corrompues, on ignore
-    }
-    return {};
-  };
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDay, setSelectedDay] = useState(null); // { day, month, year }
@@ -48,7 +25,7 @@ export default function Calendar({ isAdmin = true }) {
     color: '#c00',
     tags: '', // string input, comma-separated
   });
-  const [eventList, setEventList] = useState(getInitialEvents); // events est l'objet initial (modifiable)
+    const [eventList, setEventList] = useState({}); // Utilisation de Supabase pour la persistance des événements
   const [editEventIdx, setEditEventIdx] = useState(null); // index de l'event en édition
   const [editEventForm, setEditEventForm] = useState({ title: '', color: '#c00', tags: '' });
 
@@ -77,44 +54,40 @@ export default function Calendar({ isAdmin = true }) {
   };
 
   // Persistance des événements dans localStorage à chaque modification
-  React.useEffect(() => {
-    try {
-      localStorage.setItem('calendarEvents', JSON.stringify(eventList));
-    } catch (e) {
-      // ignore quota ou erreur
-    }
-  }, [eventList]);
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  async function fetchEvents() {
+    const { data, error } = await supabase.from('calendar_events').select('*');
+    // Transform Supabase flat array to {dateKey: [events]}
+    const eventsByDate = {};
+    (data || []).forEach(ev => {
+      if (!eventsByDate[ev.date]) eventsByDate[ev.date] = [];
+      eventsByDate[ev.date].push(ev);
+    });
+    setEventList(eventsByDate);
+  }
 
   // Ajout d'un événement
-  const handleAddEvent = (e) => {
+  const handleAddEvent = async (e) => {
     e.preventDefault();
     if (!eventForm.date || !eventForm.title) return;
-    setEventList(prev => {
-      const prevEvents = { ...prev };
-      if (!prevEvents[eventForm.date]) prevEvents[eventForm.date] = [];
-      prevEvents[eventForm.date].push({
-        title: eventForm.title,
-        color: eventForm.color,
-        tags: eventForm.tags
-          ? eventForm.tags.split(',').map(t => t.trim()).filter(Boolean)
-          : []
-      });
-      return prevEvents;
-    });
+    const tagsArr = eventForm.tags
+      ? eventForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+      : [];
+    await supabase.from('calendar_events').insert([{ date: eventForm.date, title: eventForm.title, color: eventForm.color, tags: tagsArr }]);
     setShowAddEvent(false);
     setEventForm({ date: '', title: '', color: '#c00', tags: '' });
+    fetchEvents();
   };
 
   // Suppression d'un événement
-  const handleDeleteEvent = (dateKey, idx) => {
-    setEventList(prev => {
-      const prevEvents = { ...prev };
-      if (!prevEvents[dateKey]) return prevEvents;
-      prevEvents[dateKey] = prevEvents[dateKey].filter((_, i) => i !== idx);
-      if (prevEvents[dateKey].length === 0) delete prevEvents[dateKey];
-      return prevEvents;
-    });
+  const handleDeleteEvent = async (dateKey, idx) => {
+    const event = eventList[dateKey][idx];
+    await supabase.from('calendar_events').delete().eq('id', event.id);
     setEditEventIdx(null);
+    fetchEvents();
   };
 
   // Début édition
@@ -129,21 +102,14 @@ export default function Calendar({ isAdmin = true }) {
     });
   };
   // Sauvegarde édition
-  const handleSaveEdit = (dateKey, idx) => {
-    setEventList(prev => {
-      const prevEvents = { ...prev };
-      if (!prevEvents[dateKey]) return prevEvents;
-      prevEvents[dateKey][idx] = {
-        ...prevEvents[dateKey][idx],
-        title: editEventForm.title,
-        color: editEventForm.color,
-        tags: editEventForm.tags
-          ? editEventForm.tags.split(',').map(t => t.trim()).filter(Boolean)
-          : []
-      };
-      return prevEvents;
-    });
+  const handleSaveEdit = async (dateKey, idx) => {
+    const event = eventList[dateKey][idx];
+    const tagsArr = editEventForm.tags
+      ? editEventForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+      : [];
+    await supabase.from('calendar_events').update({ title: editEventForm.title, color: editEventForm.color, tags: tagsArr }).eq('id', event.id);
     setEditEventIdx(null);
+    fetchEvents();
   };
   // Annule édition
   const handleCancelEdit = () => {

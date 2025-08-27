@@ -5,14 +5,7 @@ import { ResultatsContext } from '../contexts/ResultatsContext';
 
 const Scorers = () => {
   const { tables } = useContext(ResultatsContext);
-  const [topScorers, setTopScorers] = useState(() => {
-    // Récupère du localStorage au premier rendu
-    try {
-      return JSON.parse(localStorage.getItem('topScorersData')) || [];
-    } catch {
-      return [];
-    }
-  });
+  const [topScorers, setTopScorers] = useState([]);
 
   useEffect(() => {
     const scorerMap = {};
@@ -38,8 +31,7 @@ const Scorers = () => {
       .sort((a, b) => b.essais - a.essais)
       .slice(0, 50);
     setTopScorers(result);
-    // Sauvegarde dans le localStorage
-    localStorage.setItem('topScorersData', JSON.stringify(result));
+  // Synchronisation locale retirée (calcul dynamique)
   }, [tables]);
 
   return (

@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase/client';
 
 export default function Formation({ isAdmin = false }) {
-  const [posts, setPosts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('refereesFormationPosts');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      localStorage.removeItem('refereesFormationPosts');
-      return [];
-    }
-  });
+  const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [link, setLink] = useState('');
@@ -26,17 +19,27 @@ export default function Formation({ isAdmin = false }) {
   const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem('refereesFormationPosts', JSON.stringify(posts));
-  }, [posts]);
+    fetchPosts();
+  }, []);
 
-  const handleAddPost = (e) => {
+  async function fetchPosts() {
+    const { data } = await supabase.from('formation').select('*').order('created_at', { ascending: false });
+    setPosts(data || []);
+  }
+
+  const handleAddPost = async (e) => {
     e.preventDefault();
-    setPosts([{ title, text, link, image }, ...posts]);
+    const { error } = await supabase.from('formation').insert([{ title, text, link, image }]);
+    if (error) {
+      setError('Erreur lors de l’ajout du post.');
+      return;
+    }
     setTitle('');
     setText('');
     setLink('');
     setImage('');
     setError('');
+    fetchPosts();
   };
 
   // Gestion upload image (ajout)
@@ -61,9 +64,11 @@ export default function Formation({ isAdmin = false }) {
     reader.readAsDataURL(file);
   };
 
-  const handleDeletePost = (idxToDelete) => {
+  const handleDeletePost = async (idxToDelete) => {
     if (window.confirm('Supprimer ce post ?')) {
-      setPosts(posts => posts.filter((_, idx) => idx !== idxToDelete));
+      const post = posts[idxToDelete];
+      await supabase.from('formation').delete().eq('id', post.id);
+      fetchPosts();
     }
   };
 
@@ -76,14 +81,20 @@ export default function Formation({ isAdmin = false }) {
     setEditError('');
   };
 
-  const handleSaveEdit = (idx) => {
-    setPosts(posts => posts.map((post, i) => i === idx ? { title: editTitle, text: editText, link: editLink, image: editImage } : post));
+  const handleSaveEdit = async (idx) => {
+    const post = posts[idx];
+    const { error } = await supabase.from('formation').update({ title: editTitle, text: editText, link: editLink, image: editImage }).eq('id', post.id);
+    if (error) {
+      setEditError('Erreur lors de la modification.');
+      return;
+    }
     setEditIdx(null);
     setEditTitle('');
     setEditText('');
     setEditLink('');
     setEditImage('');
     setEditError('');
+    fetchPosts();
   };
 
   const handleCancelEdit = () => {
@@ -108,15 +119,13 @@ export default function Formation({ isAdmin = false }) {
               placeholder="Titre"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8 }}
             />
-          </div>
-          <div style={{ marginBottom: 10 }}>
             <textarea
               placeholder="Texte"
               value={text}
               onChange={e => setText(e.target.value)}
-              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', minHeight: 60 }}
+              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', minHeight: 60, marginBottom: 8 }}
             />
           </div>
           <div style={{ marginBottom: 10 }}>
@@ -125,7 +134,7 @@ export default function Formation({ isAdmin = false }) {
               placeholder="Lien (https://...)"
               value={link}
               onChange={e => setLink(e.target.value)}
-              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8 }}
             />
           </div>
           <div style={{ marginBottom: 10 }}>
@@ -133,10 +142,10 @@ export default function Formation({ isAdmin = false }) {
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc' }}
+              style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ccc', marginBottom: 8 }}
             />
             {image && (
-              <img src={image} alt="aperçu" style={{ maxWidth: '100%', maxHeight: 120, marginTop: 8, borderRadius: 6 }} />
+              <img src={image} alt="aperçu" style={{ maxWidth: '100%', maxHeight: 120, marginBottom: 8, borderRadius: 6 }} />
             )}
           </div>
           {error && <div style={{ color: '#c00', marginBottom: 8 }}>{error}</div>}

@@ -1,6 +1,7 @@
 
 // Composant News : affichage placeholder pour la section news
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase/client';
 
 // Composant News : permet de poster des actualités (comme Formation)
 export default function News({ isAdmin = false }) {
@@ -30,31 +31,30 @@ export default function News({ isAdmin = false }) {
     localStorage.setItem('refereesNewsPosts', JSON.stringify(posts));
   }, [posts]);
 
-  const handleAddPost = (e) => {
+  const handleAddPost = async (e) => {
     e.preventDefault();
     if (!title && !text && !link && !image) {
       setError('Veuillez remplir au moins un champ.');
       return;
     }
-    setPosts([{ title, text, link, image }, ...posts]);
+    // Insert post in Supabase
+    const { error: supaError } = await supabase.from('news').insert([{ title, text, link, image }]);
+    if (supaError) {
+      setError('Erreur lors de l’ajout du post.');
+      return;
+    }
     setTitle('');
     setText('');
     setLink('');
     setImage('');
     setError('');
+    fetchPosts();
   };
 
-  // Gestion upload image (ajout)
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new window.FileReader();
-    reader.onloadend = () => {
-      setImage(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
-
+  async function fetchPosts() {
+    const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+    setPosts(data || []);
+  }
   // Gestion upload image (édition)
   const handleEditImageUpload = (e) => {
     const file = e.target.files[0];
@@ -68,6 +68,7 @@ export default function News({ isAdmin = false }) {
 
   const handleDeletePost = (idxToDelete) => {
     if (window.confirm('Supprimer ce post ?')) {
+    fetchPosts();
       setPosts(posts => posts.filter((_, idx) => idx !== idxToDelete));
     }
   };

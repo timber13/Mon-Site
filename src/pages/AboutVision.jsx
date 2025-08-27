@@ -2,24 +2,33 @@
 import React, { useState, useContext } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
 import RichTextEditor from './RichTextEditor';
+import { supabase } from '../supabase/client';
 
 function VisionStrategyEditor() {
   const isAdmin = useContext(AdminContext);
   const fontFamily = 'Oswald, Arial Black, Arial, sans-serif';
-  const [text, setText] = useState(() => {
-    try {
-      return localStorage.getItem('visionStrategyText') || `<h3 style='color:#c00;margin-bottom:12px;'>Our Vision</h3><p style='font-size:18px;'>Touch Switzerland aims to promote, develop and support Touch Rugby across the country, fostering inclusivity, excellence, and community spirit.</p>`;
-    } catch {
-      return `<h3 style='color:#c00;margin-bottom:12px;'>Our Vision</h3><p style='font-size:18px;'>Touch Switzerland aims to promote, develop and support Touch Rugby across the country, fostering inclusivity, excellence, and community spirit.</p>`;
+  const defaultText = `<h3 style='color:#c00;margin-bottom:12px;'>Our Vision</h3><p style='font-size:18px;'>Touch Switzerland aims to promote, develop and support Touch Rugby across the country, fostering inclusivity, excellence, and community spirit.</p>`;
+  const [text, setText] = useState(defaultText);
+  const [loading, setLoading] = useState(true);
+  React.useEffect(() => {
+    async function fetchVision() {
+      const { data } = await supabase.from('vision').select('*').single();
+      setText(data?.text || defaultText);
+      setDraft(data?.text || defaultText);
+      setLoading(false);
     }
-  });
+    fetchVision();
+  }, []);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
 
   const handleSave = () => {
-    setText(draft);
-    localStorage.setItem('visionStrategyText', draft);
-    setEditing(false);
+    async function saveVision() {
+      setText(draft);
+      await supabase.from('vision').upsert({ id: 1, text: draft });
+      setEditing(false);
+    }
+    saveVision();
   };
   const handleCancel = () => {
     setDraft(text);

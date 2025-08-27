@@ -1,24 +1,26 @@
 
 import React, { useState, useRef } from 'react';
+import { supabase } from '../supabase/client';
 
 
 export default function Ressources({ isAdmin = false }) {
-  const [resources, setResources] = useState(() => {
-    try {
-      const data = localStorage.getItem('ressourcesList');
-      return data ? JSON.parse(data) : [];
-    } catch {
-      localStorage.removeItem('ressourcesList');
-      return [];
-    }
-  }); // (déjà robuste)
+  const [resources, setResources] = useState([]);
   const [title, setTitle] = useState('');
   const [pdfFile, setPdfFile] = useState(null);
   const [error, setError] = useState('');
   const fileInputRef = useRef();
 
   // Ajout d'un PDF
-  const handleAddResource = (e) => {
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  async function fetchResources() {
+    const { data } = await supabase.from('ressources').select('*').order('created_at', { ascending: false });
+    setResources(data || []);
+  }
+
+  const handleAddResource = async (e) => {
     e.preventDefault();
     setError('');
     if (!pdfFile) {
@@ -30,22 +32,21 @@ export default function Ressources({ isAdmin = false }) {
       return;
     }
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const newRes = { type: 'pdf', title: title || pdfFile.name, data: ev.target.result };
-      const updated = [...resources, newRes];
-      setResources(updated);
-      localStorage.setItem('ressourcesList', JSON.stringify(updated));
+      await supabase.from('ressources').insert([newRes]);
       setTitle(''); setPdfFile(null); fileInputRef.current.value = '';
+      fetchResources();
     };
     reader.readAsDataURL(pdfFile);
   };
 
   // Suppression d'une ressource
-  const handleDelete = (idx) => {
+  const handleDelete = async (idx) => {
     if (!window.confirm('Supprimer cette ressource ?')) return;
-    const updated = resources.filter((_, i) => i !== idx);
-    setResources(updated);
-    localStorage.setItem('ressourcesList', JSON.stringify(updated));
+    const res = resources[idx];
+    await supabase.from('ressources').delete().eq('id', res.id);
+    fetchResources();
   };
 
   // Modification d'une ressource (titre)
@@ -59,36 +60,31 @@ export default function Ressources({ isAdmin = false }) {
     setEditPdfFile(null);
     if (editFileInputRef.current) editFileInputRef.current.value = '';
   };
-  const handleEditSave = (idx) => {
+  const handleEditSave = async (idx) => {
+    const res = resources[idx];
     if (editPdfFile) {
       if (editPdfFile.size > 8 * 1024 * 1024) {
         setError('Le PDF est trop volumineux (max 8 Mo).');
         return;
       }
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        const updated = resources.map((res, i) =>
-          i === idx ? { ...res, title: editTitle, data: ev.target.result } : res
-        );
-        setResources(updated);
-        localStorage.setItem('ressourcesList', JSON.stringify(updated));
+      reader.onload = async (ev) => {
+        await supabase.from('ressources').update({ title: editTitle, data: ev.target.result }).eq('id', res.id);
         setEditIdx(null);
         setEditTitle('');
         setEditPdfFile(null);
         if (editFileInputRef.current) editFileInputRef.current.value = '';
         setError('');
+        fetchResources();
       };
       reader.readAsDataURL(editPdfFile);
     } else {
-      const updated = resources.map((res, i) =>
-        i === idx ? { ...res, title: editTitle } : res
-      );
-      setResources(updated);
-      localStorage.setItem('ressourcesList', JSON.stringify(updated));
+      await supabase.from('ressources').update({ title: editTitle }).eq('id', res.id);
       setEditIdx(null);
       setEditTitle('');
       setEditPdfFile(null);
       setError('');
+      fetchResources();
     }
   };
   const handleEditCancel = () => {

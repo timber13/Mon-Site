@@ -2,6 +2,7 @@ import React, { useState, useContext, useRef } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
 import RichTextEditor from './RichTextEditor';
 import SeniorsSwissTeam from './SeniorsSwissTeam';
+import { supabase } from '../supabase/client';
 
 const tabs = [
   { key: 'swiss', label: 'The Swiss Team' },
@@ -22,37 +23,40 @@ const tabContents = {
 
 export default function NationalTeam() {
   // Stockage des équipes par compétition
-  const getInitialTeams = () => {
-    try {
-      const raw = localStorage.getItem('competitionTeams');
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  };
-  const [competitionTeams, setCompetitionTeams] = useState(getInitialTeams());
+  const [competitionTeams, setCompetitionTeams] = useState({});
   const [teamName, setTeamName] = useState('');
   const [teamLink, setTeamLink] = useState('');
 
   // Ajout d'une équipe pour la compétition sélectionnée
-  const handleAddTeam = (e) => {
+  useEffect(() => {
+    fetchTeams();
+  }, []);
+
+  async function fetchTeams() {
+    const { data } = await supabase.from('competition_teams').select('*');
+    // Regroupe par compétition
+    const grouped = {};
+    (data || []).forEach(team => {
+      if (!grouped[team.competition]) grouped[team.competition] = [];
+      grouped[team.competition].push({ name: team.name, link: team.link, id: team.id });
+    });
+    setCompetitionTeams(grouped);
+  }
+
+  const handleAddTeam = async (e) => {
     e.preventDefault();
     if (!teamName.trim() || !teamLink.trim()) return;
-    const updated = { ...competitionTeams };
-    if (!updated[selectedComp]) updated[selectedComp] = [];
-    updated[selectedComp].push({ name: teamName.trim(), link: teamLink.trim() });
-    setCompetitionTeams(updated);
-    localStorage.setItem('competitionTeams', JSON.stringify(updated));
+    await supabase.from('competition_teams').insert([{ competition: selectedComp, name: teamName.trim(), link: teamLink.trim() }]);
     setTeamName('');
     setTeamLink('');
+    fetchTeams();
   };
 
   // Suppression d'une équipe
-  const handleRemoveTeam = (idx) => {
-    const updated = { ...competitionTeams };
-    updated[selectedComp].splice(idx, 1);
-    setCompetitionTeams(updated);
-    localStorage.setItem('competitionTeams', JSON.stringify(updated));
+  const handleRemoveTeam = async (idx) => {
+    const team = competitionTeams[selectedComp][idx];
+    await supabase.from('competition_teams').delete().eq('id', team.id);
+    fetchTeams();
   };
   // Competitions menu state
   const competitionsList = [

@@ -2,19 +2,13 @@
 import React, { useState, useRef, useContext, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdminContext } from '../contexts/AdminContext';
+import { supabase } from '../supabase/client';
 
 export default function Club() {
   const { t } = useTranslation();
   const isAdmin = useContext(AdminContext);
   const [showModal, setShowModal] = useState(false);
-  const [clubs, setClubs] = useState(() => {
-    try {
-      const saved = localStorage.getItem('clubs');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [clubs, setClubs] = useState([]);
 
   const [clubName, setClubName] = useState('');
   const [clubCity, setClubCity] = useState('');
@@ -29,6 +23,14 @@ export default function Club() {
 
   // Effet pour changer la couleur de la barre du menu selon le club sélectionné
   useEffect(() => {
+    fetchClubs();
+  }, []);
+
+  async function fetchClubs() {
+    const { data } = await supabase.from('clubs').select('*').order('created_at', { ascending: false });
+    setClubs(data || []);
+  }
+  useEffect(() => {
     const menuBar = document.querySelector('.menu-bar');
     if (selectedClub && selectedClub.color1 && menuBar) {
       menuBar.style.background = selectedClub.color1;
@@ -41,10 +43,9 @@ export default function Club() {
     };
   }, [selectedClub]);
 
-  const handleAddClub = () => {
+  const handleAddClub = async () => {
     if (!clubName.trim() || !clubCity.trim()) return;
-    const newClubs = [
-      ...clubs,
+    await supabase.from('clubs').insert([
       {
         name: clubName,
         city: clubCity,
@@ -55,9 +56,7 @@ export default function Club() {
         color2: clubColor2,
         titles: clubTitles.split(',').map(y => y.trim()).filter(y => y),
       },
-    ];
-    setClubs(newClubs);
-    localStorage.setItem('clubs', JSON.stringify(newClubs));
+    ]);
     setClubName('');
     setClubCity('');
     setClubImage(null);
@@ -68,11 +67,10 @@ export default function Club() {
     setClubTitles('');
     setShowModal(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    fetchClubs();
   };
   // Sauvegarde automatique si clubs changent (pour modifications futures)
-  useEffect(() => {
-    localStorage.setItem('clubs', JSON.stringify(clubs));
-  }, [clubs]);
+  // Synchronisation automatique retirée (Supabase gère la persistance)
   // Effet pour changer le fond selon les couleurs du club sélectionné
   useEffect(() => {
     if (selectedClub && selectedClub.color1 && selectedClub.color2) {

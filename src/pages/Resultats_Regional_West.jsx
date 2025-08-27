@@ -4,11 +4,15 @@ import { ExcelContext } from '../contexts/ExcelContext';
 import { ResultatsContext } from '../contexts/ResultatsContext';
 import Fiche from '../components/Fiche';
 
-export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWest }) {
-  // Sauvegarde automatique dans localStorage à chaque changement
+export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWest, useSupabase }) {
+  // Sauvegarde automatique dans Supabase à chaque changement
   React.useEffect(() => {
-    localStorage.setItem('resultatsData_regionalWest', JSON.stringify(tablesWest));
-  }, [tablesWest]);
+    if (!useSupabase) return;
+    const saveResults = async () => {
+      await supabase.from('resultats_regional_west').upsert(tablesWest);
+    };
+    saveResults();
+  }, [tablesWest, useSupabase]);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const { setTables } = useContext(ResultatsContext);
@@ -119,10 +123,10 @@ export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWe
       const newTables = await parseExcelFiles(files);
       const updated = [...tablesWest, ...newTables];
       setTablesWest(updated);
-      // Merge all divisions for global context
-      const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
-      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
-      setTables([...nationals, ...updated, ...east]);
+      if (useSupabase) {
+        await supabase.from('resultats_regional_west').upsert(updated);
+      }
+      setTables([...updated]);
     } catch (err) {
       alert("Erreur lors de l'importation du fichier. Assurez-vous que le format est correct.");
     }
@@ -130,14 +134,13 @@ export default function ResultatsRegionalWest({ isAdmin, tablesWest, setTablesWe
   };
 
   // Reset handler
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser les résultats Regional West ?')) {
-      localStorage.removeItem('resultatsData_regionalWest');
       setTablesWest([]);
-      // Merge all divisions for global context
-      const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
-      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
-      setTables([...nationals, ...east]);
+      if (useSupabase) {
+        await supabase.from('resultats_regional_west').delete().neq('id', 0);
+      }
+      setTables([]);
     }
   };
 

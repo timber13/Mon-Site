@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../supabase/client';
 
 
 export default function Photos({ isAdmin, adminEmail }) {
@@ -9,13 +10,13 @@ export default function Photos({ isAdmin, adminEmail }) {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    const storedPhotos = JSON.parse(localStorage.getItem('photos')) || [];
-    setPhotos(storedPhotos);
+    fetchPhotos();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('photos', JSON.stringify(photos));
-  }, [photos]);
+  async function fetchPhotos() {
+    const { data } = await supabase.from('photos').select('*').order('created_at', { ascending: false });
+    setPhotos(data || []);
+  }
 
   // Trigger file input dialog
   const triggerFileInput = () => {
@@ -39,8 +40,11 @@ export default function Photos({ isAdmin, adminEmail }) {
           reader.readAsDataURL(file);
         });
       })
-    ).then(imgs => {
-      setPhotos(prev => [...prev, ...imgs]);
+    ).then(async imgs => {
+      for (const img of imgs) {
+        await supabase.from('photos').insert([{ src: img }]);
+      }
+      fetchPhotos();
     });
   };
 
@@ -90,7 +94,7 @@ export default function Photos({ isAdmin, adminEmail }) {
           {photos.map((src, idx) => (
             <div key={idx} style={{ position: 'relative' }}>
               <img
-                src={src}
+                src={src.src}
                 alt={`photo-${idx}`}
                 style={{
                   width: '100%',
@@ -103,9 +107,10 @@ export default function Photos({ isAdmin, adminEmail }) {
               />
               {isAdmin && (
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (window.confirm(t('photos.deleteConfirm'))) {
-                      setPhotos(photos.filter((_, i) => i !== idx));
+                      await supabase.from('photos').delete().eq('id', src.id);
+                      fetchPhotos();
                     }
                   }}
                   style={{

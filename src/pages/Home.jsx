@@ -3,16 +3,10 @@ import React, { useState, useEffect } from 'react';
 import ClassementNationals from './Classement_Nationals';
 import ClassementRegionalWest from './Classement_Regional_West';
 import ClassementRegionalEast from './Classement_Regional_East';
+import { supabase } from '../supabase/client';
 
 function getAllPosts() {
-  // Retrieves and merges Formation and News posts, sorted by creation date (if available)
-  const formation = JSON.parse(localStorage.getItem('refereesFormationPosts') || '[]');
-  const news = JSON.parse(localStorage.getItem('refereesNewsPosts') || '[]');
-  // Add a source to differentiate
-  const fPosts = formation.map(p => ({ ...p, _source: 'Formation' }));
-  const nPosts = news.map(p => ({ ...p, _source: 'News' }));
-  // No date, so we take the order of addition (most recent first)
-  return [...fPosts, ...nPosts];
+  // Cette fonction n'est plus utilisée, migration Supabase ci-dessous
 }
 
 
@@ -20,57 +14,43 @@ function getAllPosts() {
 export default function Home({ setActiveTabFromHome }) {
   const [showAddPost, setShowAddPost] = useState(false);
   const [newPost, setNewPost] = useState({ title: '', text: '', link: '', image: '', source: 'News' });
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
-  const [posts, setPosts] = useState(getAllPosts());
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
 
   // Classement state
   const [classementTab, setClassementTab] = useState(0); // 0: Nationals, 1: West, 2: East
-  const [tablesNationals, setTablesNationals] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('resultatsData_nationals')) || [];
-    } catch {
-      return [];
-    }
-  });
-  const [tablesWest, setTablesWest] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('resultatsData_regionalWest')) || [];
-    } catch {
-      return [];
-    }
-  });
-  const [tablesEast, setTablesEast] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('resultatsData_regionalEast')) || [];
-    } catch {
-      return [];
-    }
-  });
+  const [tablesNationals, setTablesNationals] = useState([]);
+  const [tablesWest, setTablesWest] = useState([]);
+  const [tablesEast, setTablesEast] = useState([]);
 
   // Sync rankings if localStorage changes (other tab)
+  // Migration Supabase : charge les données au montage
   useEffect(() => {
-    const sync = () => {
-      setPosts(getAllPosts());
-      try {
-        setTablesNationals(JSON.parse(localStorage.getItem('resultatsData_nationals')) || []);
-        setTablesWest(JSON.parse(localStorage.getItem('resultatsData_regionalWest')) || []);
-        setTablesEast(JSON.parse(localStorage.getItem('resultatsData_regionalEast')) || []);
-      } catch {}
-    };
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
+    fetchAll();
   }, []);
 
+  async function fetchAll() {
+    // Admin
+    const { data: adminData } = await supabase.from('admin').select('*');
+    setIsAdmin(adminData && adminData.length > 0 && adminData[0].isAdmin === true);
+    // Posts
+    const { data: formation } = await supabase.from('formation').select('*').order('created_at', { ascending: false });
+    const { data: news } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+    const fPosts = (formation || []).map(p => ({ ...p, _source: 'Formation' }));
+    const nPosts = (news || []).map(p => ({ ...p, _source: 'News' }));
+    setPosts([...fPosts, ...nPosts]);
+    // Classements
+    const { data: nationals } = await supabase.from('resultats_nationals').select('*');
+    const { data: west } = await supabase.from('resultats_regional_west').select('*');
+    const { data: east } = await supabase.from('resultats_regional_east').select('*');
+    setTablesNationals(nationals || []);
+    setTablesWest(west || []);
+    setTablesEast(east || []);
+  }
+
   // Force refresh if returning to the page
-  useEffect(() => {
-    setPosts(getAllPosts());
-    try {
-      setTablesNationals(JSON.parse(localStorage.getItem('resultatsData_nationals')) || []);
-      setTablesWest(JSON.parse(localStorage.getItem('resultatsData_regionalWest')) || []);
-      setTablesEast(JSON.parse(localStorage.getItem('resultatsData_regionalEast')) || []);
-    } catch {}
-  }, []);
+  // Migration Supabase : déjà géré par fetchAll
 
 
   // Ranking block on the left with arrows
@@ -314,14 +294,19 @@ export default function Home({ setActiveTabFromHome }) {
                 alignItems: 'center',
               }}
               onSubmit={e => {
-                e.preventDefault();
-                const post = { ...newPost, _source: newPost.source };
-                const postsKey = post._source === 'Formation' ? 'refereesFormationPosts' : 'refereesNewsPosts';
-                const existing = JSON.parse(localStorage.getItem(postsKey) || '[]');
-                localStorage.setItem(postsKey, JSON.stringify([post, ...existing]));
-                setPosts(getAllPosts());
-                setShowAddPost(false);
-                setNewPost({ title: '', text: '', link: '', image: '', source: 'News' });
+                async function handleSubmit(e) {
+                  e.preventDefault();
+                  const post = { title: newPost.title, text: newPost.text, link: newPost.link, image: newPost.image };
+                  if (newPost.source === 'Formation') {
+                    await supabase.from('formation').insert([post]);
+                  } else {
+                    await supabase.from('news').insert([post]);
+                  }
+                  fetchAll();
+                  setShowAddPost(false);
+                  setNewPost({ title: '', text: '', link: '', image: '', source: 'News' });
+                }
+                handleSubmit(e);
               }}
             >
               <button

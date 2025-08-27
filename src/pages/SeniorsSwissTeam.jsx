@@ -1,25 +1,27 @@
 import React, { useState, useRef } from 'react';
 import RichTextEditor from './RichTextEditor';
+import { supabase } from '../supabase/client';
 
 export default function SeniorsSwissTeam({ isAdmin, fontFamily }) {
   // Texte
-  const [text, setText] = useState(() => {
-    try {
-      return localStorage.getItem('seniorsSwissTeamText') || `<h3 style='color:#c00;margin-bottom:12px;'>The Seniors Swiss Team</h3><p style='font-size:18px;'>Write here about the Seniors Swiss Team, its values, history, and achievements.</p>`;
-    } catch {
-      return `<h3 style='color:#c00;margin-bottom:12px;'>The Seniors Swiss Team</h3><p style='font-size:18px;'>Write here about the Seniors Swiss Team, its values, history, and achievements.</p>`;
-    }
-  });
+  const defaultText = `<h3 style='color:#c00;margin-bottom:12px;'>The Seniors Swiss Team</h3><p style='font-size:18px;'>Write here about the Seniors Swiss Team, its values, history, and achievements.</p>`;
+  const [text, setText] = useState(defaultText);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(() => text);
-  // Image
-  const [image, setImage] = useState(() => {
-    try {
-      return localStorage.getItem('seniorsSwissTeamImage') || null;
-    } catch {
-      return null;
+  const [draft, setDraft] = useState(defaultText);
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  React.useEffect(() => {
+    async function fetchSeniors() {
+      const { data } = await supabase.from('seniors_swiss_team').select('*').single();
+      setText(data?.text || defaultText);
+      setDraft(data?.text || defaultText);
+      setImage(data?.image || null);
+      setLocalFont(data?.font || 'Oswald, Arial Black, Arial, sans-serif');
+      setLocalSize(data?.size || 11);
+      setLoading(false);
     }
-  });
+    fetchSeniors();
+  }, []);
   const fileInputRef = useRef();
 
   // Police et taille
@@ -35,18 +37,21 @@ export default function SeniorsSwissTeam({ isAdmin, fontFamily }) {
   const [localFont, setLocalFont] = useState(() => localStorage.getItem('seniorsFontFamily') || fontOptions[0].value);
   const [localSize, setLocalSize] = useState(() => Number(localStorage.getItem('seniorsFontSize')) || 11);
   const handleFontChange = (e) => {
-    setLocalFont(e.target.value);
-    localStorage.setItem('seniorsFontFamily', e.target.value);
+  setLocalFont(e.target.value);
+  supabase.from('seniors_swiss_team').upsert({ id: 1, font: e.target.value });
   };
   const handleSizeChange = (e) => {
-    setLocalSize(Number(e.target.value));
-    localStorage.setItem('seniorsFontSize', e.target.value);
+  setLocalSize(Number(e.target.value));
+  supabase.from('seniors_swiss_team').upsert({ id: 1, size: Number(e.target.value) });
   };
 
   const handleSave = () => {
-    setText(draft);
-    localStorage.setItem('seniorsSwissTeamText', draft);
-    setEditing(false);
+    async function saveSeniors() {
+      setText(draft);
+      await supabase.from('seniors_swiss_team').upsert({ id: 1, text: draft });
+      setEditing(false);
+    }
+    saveSeniors();
   };
   const handleEdit = () => {
     setDraft(text);
@@ -60,9 +65,9 @@ export default function SeniorsSwissTeam({ isAdmin, fontFamily }) {
     const file = e.target.files[0];
     if (file) {
       const reader = new window.FileReader();
-      reader.onload = (ev) => {
+      reader.onload = async (ev) => {
         setImage(ev.target.result);
-        localStorage.setItem('seniorsSwissTeamImage', ev.target.result);
+        await supabase.from('seniors_swiss_team').upsert({ id: 1, image: ev.target.result });
       };
       reader.readAsDataURL(file);
     }
@@ -82,6 +87,7 @@ export default function SeniorsSwissTeam({ isAdmin, fontFamily }) {
           <>
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} style={{ marginBottom: 8 }} />
         {image && <button onClick={() => { setImage(null); localStorage.removeItem('seniorsSwissTeamImage'); }} style={{ fontFamily: localFont, background: '#888', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Remove</button>}
+  {image && <button onClick={async () => { setImage(null); await supabase.from('seniors_swiss_team').upsert({ id: 1, image: null }); }} style={{ fontFamily: localFont, background: '#888', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Remove</button>}
           </>
         )}
       </div>

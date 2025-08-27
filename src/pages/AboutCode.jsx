@@ -1,34 +1,43 @@
 import React, { useState, useContext } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
+import { supabase } from '../supabase/client';
 
 export default function AboutCode() {
   const isAdmin = useContext(AdminContext);
   const [editing, setEditing] = useState(false);
 
-  // Récupère les valeurs depuis localStorage ou valeurs par défaut
-  const getInitial = (key, def) => {
-    try {
-      const val = localStorage.getItem(key);
-      return val !== null ? val : def;
-    } catch {
-      return def;
+  const [pdfUrl, setPdfUrl] = useState('/pdfs/code_of_conduct.pdf');
+  const [pdfLabel, setPdfLabel] = useState('Télécharger le Code of Conduct (PDF)');
+  const [sideText, setSideText] = useState('Consultez le document officiel du Code of Conduct.');
+  const [loading, setLoading] = useState(true);
+  React.useEffect(() => {
+    async function fetchCode() {
+      const { data } = await supabase.from('code_of_conduct').select('*').single();
+      setPdfUrl(data?.pdfUrl || '/pdfs/code_of_conduct.pdf');
+      setPdfLabel(data?.pdfLabel || 'Télécharger le Code of Conduct (PDF)');
+      setSideText(data?.sideText || 'Consultez le document officiel du Code of Conduct.');
+      setLoading(false);
     }
-  };
-
-  const [pdfUrl, setPdfUrl] = useState(() => getInitial('code_pdfUrl', '/pdfs/code_of_conduct.pdf'));
-  const [pdfLabel, setPdfLabel] = useState(() => getInitial('code_pdfLabel', 'Télécharger le Code of Conduct (PDF)'));
-  const [sideText, setSideText] = useState(() => getInitial('code_sideText', 'Consultez le document officiel du Code of Conduct.'));
+    fetchCode();
+  }, []);
 
   const handleSave = () => {
-    localStorage.setItem('code_pdfUrl', pdfUrl);
-    localStorage.setItem('code_pdfLabel', pdfLabel);
-    localStorage.setItem('code_sideText', sideText);
-    setEditing(false);
+    async function saveCode() {
+      await supabase.from('code_of_conduct').upsert({ id: 1, pdfUrl, pdfLabel, sideText });
+      setEditing(false);
+    }
+    saveCode();
   };
   const handleCancel = () => {
-    setPdfUrl(getInitial('code_pdfUrl', '/pdfs/code_of_conduct.pdf'));
-    setPdfLabel(getInitial('code_pdfLabel', 'Télécharger le Code of Conduct (PDF)'));
-    setSideText(getInitial('code_sideText', 'Consultez le document officiel du Code of Conduct.'));
+    React.useEffect(() => {
+      async function fetchCode() {
+        const { data } = await supabase.from('code_of_conduct').select('*').single();
+        setPdfUrl(data?.pdfUrl || '/pdfs/code_of_conduct.pdf');
+        setPdfLabel(data?.pdfLabel || 'Télécharger le Code of Conduct (PDF)');
+        setSideText(data?.sideText || 'Consultez le document officiel du Code of Conduct.');
+      }
+      fetchCode();
+    }, []);
     setEditing(false);
   };
   // Upload PDF
@@ -36,19 +45,16 @@ export default function AboutCode() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(ev) {
-      try {
-        localStorage.setItem('code_pdfFile', ev.target.result);
-        setPdfUrl('data:application/pdf;base64,' + ev.target.result.split(',')[1]);
-      } catch {}
+    reader.onload = async function(ev) {
+      setPdfUrl('data:application/pdf;base64,' + ev.target.result.split(',')[1]);
+      await supabase.from('code_of_conduct').upsert({ id: 1, pdfUrl: 'data:application/pdf;base64,' + ev.target.result.split(',')[1] });
     };
     reader.readAsDataURL(file);
   };
   // Supprimer le PDF uploadé
-  const handleDeletePdf = () => {
-    localStorage.removeItem('code_pdfFile');
+  const handleDeletePdf = async () => {
     setPdfUrl('/pdfs/code_of_conduct.pdf');
-    localStorage.setItem('code_pdfUrl', '/pdfs/code_of_conduct.pdf');
+    await supabase.from('code_of_conduct').upsert({ id: 1, pdfUrl: '/pdfs/code_of_conduct.pdf' });
   };
 
   return (

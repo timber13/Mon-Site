@@ -1,37 +1,39 @@
 
 import React, { useState, useContext } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
+import { supabase } from '../supabase/client';
 
 export default function AboutConstitution() {
-  // Supprimer le PDF uploadé
-  const handleDeletePdf = () => {
-    localStorage.removeItem('constitution_pdfFile');
+  const handleDeletePdf = async () => {
     setPdfUrl('/pdfs/constitution.pdf');
-    localStorage.setItem('constitution_pdfUrl', '/pdfs/constitution.pdf');
+    await supabase.from('constitution').upsert({ id: 1, pdfUrl: '/pdfs/constitution.pdf' });
   };
 
   const isAdmin = useContext(AdminContext);
   const [editing, setEditing] = useState(false);
 
   // Récupère les valeurs depuis localStorage ou valeurs par défaut
-  const getInitial = (key, def) => {
-    try {
-      const val = localStorage.getItem(key);
-      return val !== null ? val : def;
-    } catch {
-      return def;
+  const [pdfUrl, setPdfUrl] = useState('/pdfs/constitution.pdf');
+  const [pdfLabel, setPdfLabel] = useState('Télécharger la Constitution (PDF)');
+  const [sideText, setSideText] = useState('Consultez le document officiel de la constitution de Touch Switzerland.');
+  const [loading, setLoading] = useState(true);
+  React.useEffect(() => {
+    async function fetchConstitution() {
+      const { data } = await supabase.from('constitution').select('*').single();
+      setPdfUrl(data?.pdfUrl || '/pdfs/constitution.pdf');
+      setPdfLabel(data?.pdfLabel || 'Télécharger la Constitution (PDF)');
+      setSideText(data?.sideText || 'Consultez le document officiel de la constitution de Touch Switzerland.');
+      setLoading(false);
     }
-  };
-
-  const [pdfUrl, setPdfUrl] = useState(() => getInitial('constitution_pdfUrl', '/pdfs/constitution.pdf'));
-  const [pdfLabel, setPdfLabel] = useState(() => getInitial('constitution_pdfLabel', 'Télécharger la Constitution (PDF)'));
-  const [sideText, setSideText] = useState(() => getInitial('constitution_sideText', 'Consultez le document officiel de la constitution de Touch Switzerland.'));
+    fetchConstitution();
+  }, []);
 
   const handleSave = () => {
-    localStorage.setItem('constitution_pdfUrl', pdfUrl);
-    localStorage.setItem('constitution_pdfLabel', pdfLabel);
-    localStorage.setItem('constitution_sideText', sideText);
-    setEditing(false);
+    async function saveConstitution() {
+      await supabase.from('constitution').upsert({ id: 1, pdfUrl, pdfLabel, sideText });
+      setEditing(false);
+    }
+    saveConstitution();
   };
 
   // Upload PDF
@@ -39,19 +41,22 @@ export default function AboutConstitution() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = function(ev) {
-      // Sauvegarde le PDF dans localStorage (base64) et met à jour le lien
-      try {
-        localStorage.setItem('constitution_pdfFile', ev.target.result);
-        setPdfUrl('data:application/pdf;base64,' + ev.target.result.split(',')[1]);
-      } catch {}
+    reader.onload = async function(ev) {
+      setPdfUrl('data:application/pdf;base64,' + ev.target.result.split(',')[1]);
+      await supabase.from('constitution').upsert({ id: 1, pdfUrl: 'data:application/pdf;base64,' + ev.target.result.split(',')[1] });
     };
     reader.readAsDataURL(file);
   };
   const handleCancel = () => {
-    setPdfUrl(getInitial('constitution_pdfUrl', '/pdfs/constitution.pdf'));
-    setPdfLabel(getInitial('constitution_pdfLabel', 'Télécharger la Constitution (PDF)'));
-    setSideText(getInitial('constitution_sideText', 'Consultez le document officiel de la constitution de Touch Switzerland.'));
+    React.useEffect(() => {
+      async function fetchConstitution() {
+        const { data } = await supabase.from('constitution').select('*').single();
+        setPdfUrl(data?.pdfUrl || '/pdfs/constitution.pdf');
+        setPdfLabel(data?.pdfLabel || 'Télécharger la Constitution (PDF)');
+        setSideText(data?.sideText || 'Consultez le document officiel de la constitution de Touch Switzerland.');
+      }
+      fetchConstitution();
+    }, []);
     setEditing(false);
   };
 

@@ -1,18 +1,23 @@
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { supabase } from '../../supabase/client';
 import { ExcelContext } from '../contexts/ExcelContext';
 import { ResultatsContext } from '../contexts/ResultatsContext';
 import Fiche from '../components/Fiche';
 
-export default function ResultatsNationals({ isAdmin, tablesNationals, setTablesNationals }) {
+export default function ResultatsNationals({ isAdmin, tablesNationals, setTablesNationals, useSupabase }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const { setTables } = useContext(ResultatsContext);
 
-  // Sauvegarde automatique dans localStorage à chaque changement
-  React.useEffect(() => {
-    localStorage.setItem('resultatsData_nationals', JSON.stringify(tablesNationals));
-  }, [tablesNationals]);
+  // Sauvegarde automatique dans Supabase à chaque changement
+  useEffect(() => {
+    if (!useSupabase) return;
+    const saveResults = async () => {
+      await supabase.from('resultats_nationals').upsert(tablesNationals);
+    };
+    saveResults();
+  }, [tablesNationals, useSupabase]);
 
   const styles = {
     container: {
@@ -120,11 +125,11 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
       const newTables = await parseExcelFiles(files);
       const updated = [...tablesNationals, ...newTables];
       setTablesNationals(updated);
-      localStorage.setItem('resultatsData_nationals', JSON.stringify(updated));
+      if (useSupabase) {
+        await supabase.from('resultats_nationals').upsert(updated);
+      }
       // Merge all divisions for global context
-      const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
-      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
-      setTables([...updated, ...west, ...east]);
+      setTables([...updated]);
     } catch (err) {
       alert("Erreur lors de l'importation du fichier. Assurez-vous que le format est correct.");
     }
@@ -132,14 +137,13 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
   };
 
   // Reset handler
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser les résultats Nationals ?')) {
-      localStorage.removeItem('resultatsData_nationals');
       setTablesNationals([]);
-      // Merge all divisions for global context
-      const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
-      const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
-      setTables([...west, ...east]);
+      if (useSupabase) {
+        await supabase.from('resultats_nationals').delete().neq('id', 0);
+      }
+      setTables([]);
     }
   };
 

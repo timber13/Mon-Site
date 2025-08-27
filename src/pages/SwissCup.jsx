@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../../supabase/client';
 import { useTranslation } from 'react-i18next';
 import ResultatsNationals from './Resultats_Nationals';
 import ClassementNationals from './Classement_Nationals';
@@ -12,18 +13,9 @@ import Scorers from './Scorers';
 export default function SwissCup(props) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(props.initialTab || 'nationals');
-  const [tablesNationals, setTablesNationals] = useState(() => {
-    const saved = localStorage.getItem('resultatsData_nationals');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [tablesWest, setTablesWest] = useState(() => {
-    const saved = localStorage.getItem('resultatsData_regionalWest');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [tablesEast, setTablesEast] = useState(() => {
-    const saved = localStorage.getItem('resultatsData_regionalEast');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [tablesNationals, setTablesNationals] = useState([]);
+  const [tablesWest, setTablesWest] = useState([]);
+  const [tablesEast, setTablesEast] = useState([]);
   // Ajout du state pour les sous-onglets (doit être AVANT le return)
   const [nationalsSubTab, setNationalsSubTab] = useState(props.initialTab === 'nationals' && props.initialSubTab === 'standings' ? 'standings' : 'results');
   const [westSubTab, setWestSubTab] = useState(props.initialTab === 'regionalWest' && props.initialSubTab === 'standings' ? 'standings' : 'results');
@@ -37,18 +29,17 @@ export default function SwissCup(props) {
     // eslint-disable-next-line
   }, []);
 
-  // Keep tables in sync with localStorage (in case of admin import/reset in another tab)
-  React.useEffect(() => {
-    const sync = () => {
-      const savedN = localStorage.getItem('resultatsData_nationals');
-      setTablesNationals(savedN ? JSON.parse(savedN) : []);
-      const savedW = localStorage.getItem('resultatsData_regionalWest');
-      setTablesWest(savedW ? JSON.parse(savedW) : []);
-      const savedE = localStorage.getItem('resultatsData_regionalEast');
-      setTablesEast(savedE ? JSON.parse(savedE) : []);
+  // Load results from Supabase on mount
+  useEffect(() => {
+    const fetchResults = async () => {
+      const { data: nationals, error: errorN } = await supabase.from('resultats_nationals').select('*');
+      setTablesNationals(nationals || []);
+      const { data: west, error: errorW } = await supabase.from('resultats_regional_west').select('*');
+      setTablesWest(west || []);
+      const { data: east, error: errorE } = await supabase.from('resultats_regional_east').select('*');
+      setTablesEast(east || []);
     };
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
+    fetchResults();
   }, []);
 
   // Onglet Nationals réactivé
@@ -144,7 +135,7 @@ export default function SwissCup(props) {
             </div>
             <div>
               {nationalsSubTab === 'results' && (
-                <ResultatsNationals tablesNationals={tablesNationals} setTablesNationals={setTablesNationals} {...props} />
+                <ResultatsNationals tablesNationals={tablesNationals} setTablesNationals={setTablesNationals} useSupabase {...props} />
               )}
               {nationalsSubTab === 'standings' && (
                 <ClassementNationals tablesNationals={tablesNationals} {...props} />
@@ -199,7 +190,7 @@ export default function SwissCup(props) {
             </div>
             <div>
               {westSubTab === 'results' && (
-                <ResultatsRegionalWest tablesWest={tablesWest} setTablesWest={setTablesWest} {...props} />
+                <ResultatsRegionalWest tablesWest={tablesWest} setTablesWest={setTablesWest} useSupabase {...props} />
               )}
               {westSubTab === 'standings' && (
                 <ClassementRegionalWest tablesWest={tablesWest} {...props} />
@@ -254,7 +245,7 @@ export default function SwissCup(props) {
             </div>
             <div>
               {eastSubTab === 'results' && (
-                <ResultatsRegionalEast tablesEast={tablesEast} setTablesEast={setTablesEast} {...props} />
+                <ResultatsRegionalEast tablesEast={tablesEast} setTablesEast={setTablesEast} useSupabase {...props} />
               )}
               {eastSubTab === 'standings' && (
                 <ClassementRegionalEast tablesEast={tablesEast} {...props} />

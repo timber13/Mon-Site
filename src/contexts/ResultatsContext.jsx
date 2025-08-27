@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { supabase } from '../supabase/client';
 
 export const ResultatsContext = createContext();
 
@@ -7,36 +8,36 @@ export const ResultatsProvider = ({ children }) => {
 
   // Charger depuis le localStorage au démarrage
   useEffect(() => {
-    const saved = localStorage.getItem('resultatsTables');
-    if (saved) {
-      try {
-        setTables(JSON.parse(saved));
-      } catch (err) {
-        console.error("Erreur parsing localStorage:", err);
-      }
-    }
+    fetchTables();
   }, []);
+
+  async function fetchTables() {
+    const { data, error } = await supabase.from('resultats').select('*').order('created_at', { ascending: false });
+    setTables(data || []);
+  }
 
   // Sauvegarder à chaque modification
   useEffect(() => {
-    localStorage.setItem('resultatsTables', JSON.stringify(tables));
+    // Plus besoin de localStorage, tout est sur Supabase
   }, [tables]);
 
   const addTables = (newTables) => {
-    setTables(prev => [...prev, ...newTables]);
+    Promise.all(newTables.map(async (table) => {
+      await supabase.from('resultats').insert([table]);
+    })).then(fetchTables);
   };
 
   const removeTable = (index) => {
-    setTables(prev => prev.filter((_, i) => i !== index));
+  const table = tables[index];
+  supabase.from('resultats').delete().eq('id', table.id).then(fetchTables);
   };
 
   const clearTables = () => {
-    setTables([]);
-    localStorage.removeItem('resultatsTables');
+  supabase.from('resultats').delete().neq('id', 0).then(fetchTables);
   };
 
   const resetTables = () => {
-    setTables([]);
+  supabase.from('resultats').delete().neq('id', 0).then(fetchTables);
   };
 
   return (
