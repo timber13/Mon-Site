@@ -2,7 +2,7 @@ import React, { useState, useContext, useRef } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
 import RichTextEditor from './RichTextEditor';
 import SeniorsSwissTeam from './SeniorsSwissTeam';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 
 const tabs = [
   { key: 'swiss', label: 'The Swiss Team' },
