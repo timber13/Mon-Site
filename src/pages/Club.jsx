@@ -2,7 +2,7 @@
 import React, { useState, useRef, useContext, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdminContext } from '../contexts/AdminContext';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 
 export default function Club() {
   const { t } = useTranslation();

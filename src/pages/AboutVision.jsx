@@ -2,7 +2,7 @@
 import React, { useState, useContext } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
 import RichTextEditor from './RichTextEditor';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 
 function VisionStrategyEditor() {
   const isAdmin = useContext(AdminContext);

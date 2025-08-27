@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import RichTextEditor from './RichTextEditor';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 
 export default function SeniorsSwissTeam({ isAdmin, fontFamily }) {
   // Texte

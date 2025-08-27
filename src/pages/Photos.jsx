@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 
 
 export default function Photos({ isAdmin, adminEmail }) {

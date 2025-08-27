@@ -1,7 +1,7 @@
 
 // Composant News : affichage placeholder pour la section news
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 
 // Composant News : permet de poster des actualités (comme Formation)
 export default function News({ isAdmin = false }) {
