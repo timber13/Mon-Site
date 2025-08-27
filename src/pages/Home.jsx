@@ -218,7 +218,7 @@ export default function Home({ setActiveTabFromHome }) {
             justifyContent: 'center',
           }}>
             <div style={{
-              background: '#fff',
+              background: 'rgba(218, 12, 12, 0.2)',
               borderRadius: 18,
               boxShadow: '0 8px 32px #c0020a55',
               padding: 48,
@@ -229,7 +229,6 @@ export default function Home({ setActiveTabFromHome }) {
               overflowY: 'auto',
               position: 'relative',
               display: 'flex',
-                      background: 'rgba(218, 12, 12, 0.2)',
               alignItems: 'center',
             }}>
               <button
