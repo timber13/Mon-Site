@@ -1,8 +1,5 @@
-
 import { supabase } from '../../supabase/client';
-
-import React, { useState, useRef } from 'react';
-import { supabase } from '../../supabase/client';
+import React, { useState, useRef, useEffect } from 'react';
 
 
 export default function Ressources({ isAdmin = false }) {
