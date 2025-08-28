@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 // Composant Matchs : affichage placeholder pour la section matchs
 import React from 'react';
 import { useTranslation } from 'react-i18next';

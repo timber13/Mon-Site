@@ -1,3 +1,5 @@
+
+import { supabase } from '../../supabase/client';
 import React from 'react';
 
 // Colonne Next events extraite de Calendar.jsx

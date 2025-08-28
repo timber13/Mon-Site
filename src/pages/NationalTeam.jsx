@@ -1,8 +1,8 @@
-import React, { useState, useContext, useRef } from 'react';
+import { supabase } from '../../supabase/client';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
 import RichTextEditor from './RichTextEditor';
 import SeniorsSwissTeam from './SeniorsSwissTeam';
-import { supabase } from '../../supabase/client';
 
 const tabs = [
   { key: 'swiss', label: 'The Swiss Team' },
@@ -81,38 +81,20 @@ export default function NationalTeam() {
     { label: 'Comic Sans', value: 'Comic Sans MS, cursive, sans-serif' },
   ];
   // Font and size for Swiss Team block
-  const [swissFontFamily, setSwissFontFamily] = useState(() => localStorage.getItem('swissFontFamily') || fontOptions[0].value);
-  const [swissFontSize, setSwissFontSize] = useState(() => Number(localStorage.getItem('swissFontSize')) || 11);
-  const handleSwissFontChange = (e) => {
-    setSwissFontFamily(e.target.value);
-    localStorage.setItem('swissFontFamily', e.target.value);
-  };
-  const handleSwissSizeChange = (e) => {
-    setSwissFontSize(Number(e.target.value));
-    localStorage.setItem('swissFontSize', e.target.value);
-  };
-  const [text, setText] = useState(() => {
-    try {
-      return localStorage.getItem('swissTeamText') || `<h3 style='color:#c00;margin-bottom:12px;'>Swiss National Team</h3><p style='font-size:18px;'>Write here about the Swiss National Team, its values, history, and achievements.</p>`;
-    } catch {
-      return `<h3 style='color:#c00;margin-bottom:12px;'>Swiss National Team</h3><p style='font-size:18px;'>Write here about the Swiss National Team, its values, history, and achievements.</p>`;
-    }
-  });
+  const [swissFontFamily, setSwissFontFamily] = useState(fontOptions[0].value);
+  const [swissFontSize, setSwissFontSize] = useState(11);
+  const [text, setText] = useState(`<h3 style='color:#c00;margin-bottom:12px;'>Swiss National Team</h3><p style='font-size:18px;'>Write here about the Swiss National Team, its values, history, and achievements.</p>`);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(() => text);
-  const [image, setImage] = useState(() => {
-    try {
-      return localStorage.getItem('swissTeamImage') || null;
-    } catch {
-      return null;
-    }
-  });
+  const [image, setImage] = useState(null);
   const fileInputRef = useRef();
 
   const handleSave = () => {
-    setText(draft);
-    localStorage.setItem('swissTeamText', draft);
-    setEditing(false);
+    (async () => {
+      setText(draft);
+      await supabase.from('swiss_team_main').upsert({ id: 1, text: draft });
+      setEditing(false);
+    })();
   };
   const handleEdit = () => {
     setDraft(text);
@@ -128,10 +110,34 @@ export default function NationalTeam() {
       const reader = new window.FileReader();
       reader.onload = (ev) => {
         setImage(ev.target.result);
-        localStorage.setItem('swissTeamImage', ev.target.result);
+        supabase.from('swiss_team_main').upsert({ id: 1, image: ev.target.result });
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Load Swiss team block from Supabase
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from('swiss_team_main').select('*').eq('id', 1).maybeSingle();
+      if (data) {
+        setText(data.text || text);
+        setDraft(data.text || text);
+        setImage(data.image || null);
+        setSwissFontFamily(data.font || swissFontFamily);
+        setSwissFontSize(data.size || swissFontSize);
+      }
+    })();
+  }, []);
+
+  const handleSwissFontChange = (e) => {
+    setSwissFontFamily(e.target.value);
+    supabase.from('swiss_team_main').upsert({ id: 1, font: e.target.value });
+  };
+  const handleSwissSizeChange = (e) => {
+    const size = Number(e.target.value);
+    setSwissFontSize(size);
+    supabase.from('swiss_team_main').upsert({ id: 1, size });
   };
 
   const tabBtnStyle = (active) => ({
@@ -244,7 +250,7 @@ export default function NationalTeam() {
                 {isAdmin && (
                   <>
                     <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} style={{ marginBottom: 8 }} />
-                {image && <button onClick={() => { setImage(null); localStorage.removeItem('swissTeamImage'); }} style={{ fontFamily: swissFontFamily, background: '#888', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Remove</button>}
+                {image && <button onClick={() => { setImage(null); supabase.from('swiss_team_main').upsert({ id: 1, image: null }); }} style={{ fontFamily: swissFontFamily, background: '#888', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Remove</button>}
                   </>
                 )}
               </div>

@@ -1,3 +1,5 @@
+
+import { supabase } from '../../supabase/client';
 import React, { createContext } from 'react';
 
 // Par défaut, non admin

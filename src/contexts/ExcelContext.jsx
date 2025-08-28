@@ -179,14 +179,6 @@ export const ExcelProvider = ({ children }) => {
               });
             }
 
-            // Sauvegarde dans le localStorage si c'est la feuille principale (Nationals)
-            if (sheetName.toLowerCase().includes('nationals') || sheetName.toLowerCase().includes('national')) {
-              try {
-                localStorage.setItem('resultatsData_nationals', JSON.stringify([{ title: `Swiss Cup ${location}`, data: rows }]));
-              } catch (e) {
-                // ignore erreur quota
-              }
-            }
             resolve({ title: `Swiss Cup ${location}`, data: rows });
           } catch (error) {
             reject(error);

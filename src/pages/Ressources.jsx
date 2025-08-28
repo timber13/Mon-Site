@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 import React, { useState, useRef } from 'react';
 import { supabase } from '../../supabase/client';
 

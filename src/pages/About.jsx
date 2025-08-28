@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 import React, { useState } from 'react';
 import AboutExecutive from './AboutExecutive';
 import AboutVision from './AboutVision';

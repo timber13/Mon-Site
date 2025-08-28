@@ -1,6 +1,7 @@
 
 // Page principale pour l'affichage et la gestion des résultats (Nationals, Regional West, Regional East)
 import React, { useContext, useEffect, useState } from 'react';
+import { supabase } from '../../supabase/client';
 import { useContext as useExcelContext } from 'react';
 import { ExcelContext } from '../contexts/ExcelContext';
 import { ResultatsContext } from '../contexts/ResultatsContext';
@@ -19,30 +20,43 @@ export default function Resultats({ isAdmin, adminEmail }) {
   const [tablesEast, setTablesEast] = useState([]);           // Résultats région Est
   const [activeTab, setActiveTab] = useState('nationals');    // Onglet actif
 
-  // Au montage : charger les résultats sauvegardés dans le localStorage
+  // Fetch from Supabase on mount
   useEffect(() => {
-    const savedN = localStorage.getItem('resultatsData_nationals');
-    const savedW = localStorage.getItem('resultatsData_regionalWest');
-    const savedE = localStorage.getItem('resultatsData_regionalEast');
-    const nationals = savedN ? JSON.parse(savedN) : [];
-    const west = savedW ? JSON.parse(savedW) : [];
-    const east = savedE ? JSON.parse(savedE) : [];
-    setTablesNationals(nationals);
-    setTablesWest(west);
-    setTablesEast(east);
-    // Concatène toutes les tables pour TopScorers et les remet dans le contexte global (et localStorage)
-    setTables([...nationals, ...west, ...east]);
+    const fetchAll = async () => {
+      const [n, w, e] = await Promise.all([
+        supabase.from('resultats_nationals').select('*').order('created_at', { ascending: false }),
+        supabase.from('resultats_regional_west').select('*').order('created_at', { ascending: false }),
+        supabase.from('resultats_regional_east').select('*').order('created_at', { ascending: false }),
+      ]);
+      const nationals = n.data || [];
+      const west = w.data || [];
+      const east = e.data || [];
+      setTablesNationals(nationals);
+      setTablesWest(west);
+      setTablesEast(east);
+      setTables([...nationals, ...west, ...east]);
+    };
+    fetchAll();
   }, []);
 
-  // Sauvegarder chaque catégorie dans le localStorage à chaque modification
+  // Autosave to Supabase on change
   useEffect(() => {
-    localStorage.setItem('resultatsData_nationals', JSON.stringify(tablesNationals));
+    const save = async () => {
+      await supabase.from('resultats_nationals').upsert(tablesNationals);
+    };
+    if (tablesNationals?.length) save();
   }, [tablesNationals]);
   useEffect(() => {
-    localStorage.setItem('resultatsData_regionalWest', JSON.stringify(tablesWest));
+    const save = async () => {
+      await supabase.from('resultats_regional_west').upsert(tablesWest);
+    };
+    if (tablesWest?.length) save();
   }, [tablesWest]);
   useEffect(() => {
-    localStorage.setItem('resultatsData_regionalEast', JSON.stringify(tablesEast));
+    const save = async () => {
+      await supabase.from('resultats_regional_east').upsert(tablesEast);
+    };
+    if (tablesEast?.length) save();
   }, [tablesEast]);
 
   // Gestion de l'import de fichiers Excel pour chaque onglet
@@ -64,27 +78,26 @@ export default function Resultats({ isAdmin, adminEmail }) {
   };
 
   // Réinitialise les résultats pour un onglet donné
-  const resetDataByTab = (tab) => {
+  const resetDataByTab = async (tab) => {
     if (!window.confirm('Voulez-vous vraiment réinitialiser tous les résultats ?')) return;
     let newNationals = tablesNationals;
     let newWest = tablesWest;
     let newEast = tablesEast;
     if (tab === 'nationals') {
-      localStorage.removeItem('resultatsData_nationals');
+      await supabase.from('resultats_nationals').delete().neq('id', 0);
       setTablesNationals([]);
       newNationals = [];
     }
     if (tab === 'regionalWest') {
-      localStorage.removeItem('resultatsData_regionalWest');
+      await supabase.from('resultats_regional_west').delete().neq('id', 0);
       setTablesWest([]);
       newWest = [];
     }
     if (tab === 'regionalEast') {
-      localStorage.removeItem('resultatsData_regionalEast');
+      await supabase.from('resultats_regional_east').delete().neq('id', 0);
       setTablesEast([]);
       newEast = [];
     }
-    // Met à jour le contexte global pour TopScorers avec toutes les tables restantes
     setTables([...newNationals, ...newWest, ...newEast]);
   };
 

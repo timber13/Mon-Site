@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 // Page Classement : affichage des classements et des topscorers avec onglets
 import React, { useState } from "react";
 import ClassementNationals from "./Classement_Nationals";

@@ -1,3 +1,4 @@
+import { supabase } from '../../supabase/client';
 import React from 'react';
 
 export default function LogoTS({ style = {}, size = 44 }) {

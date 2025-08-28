@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 import React, { useState } from "react";
 
 // ClassementNationals is now a pure component that receives tablesNationals as a prop

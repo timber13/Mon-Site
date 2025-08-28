@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 import React, { useState, useContext } from 'react';
 import { AdminContext } from '../contexts/AdminContext';
 import { supabase } from '../../supabase/client';

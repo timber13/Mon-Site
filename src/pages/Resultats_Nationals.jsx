@@ -170,10 +170,8 @@ export default function ResultatsNationals({ isAdmin, tablesNationals, setTables
                 onClick={() => {
                   const updated = tablesNationals.filter((_, i2) => i2 !== idx);
                   setTablesNationals(updated);
-                  // Merge all divisions for global context
-                  const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
-                  const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
-                  setTables([...updated, ...west, ...east]);
+                  // Merge all divisions for global context using available state
+                  setTables([...updated]);
                 }}
               >🗑 Supprimer</button>
             )}

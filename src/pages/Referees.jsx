@@ -1,3 +1,5 @@
+
+import { supabase } from '../../supabase/client';
 // Page Referees : gestion des sous-onglets pour les arbitres (formation, news, ressources, coaches)
 import React, { useState } from 'react';
 import Formation from './Formation';

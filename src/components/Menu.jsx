@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import LogoTS from './LogoTS';
 import { useContext } from 'react';
@@ -12,20 +14,23 @@ export default function Menu({ activeTab, setActiveTab, onAdminClick, onSearch, 
   const [highlightIdx, setHighlightIdx] = useState(0);
   const wrapperRef = useRef(null);
   const isAdmin = useContext(AdminContext);
-  const [customLogo, setCustomLogo] = useState(() => {
-    try {
-      return localStorage.getItem('customLogo') || '';
-    } catch {
-      return '';
-    }
-  });
+  const [customLogo, setCustomLogo] = useState('');
+  // Load custom logo from Supabase settings
+  useEffect(() => {
+    const loadLogo = async () => {
+      const { data } = await supabase.from('settings').select('value').eq('key', 'customLogo').maybeSingle();
+      setCustomLogo(data?.value || '');
+    };
+    loadLogo();
+  }, []);
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        setCustomLogo(ev.target.result);
-        localStorage.setItem('customLogo', ev.target.result);
+  setCustomLogo(ev.target.result);
+  // Persist in Supabase settings
+  supabase.from('settings').upsert({ key: 'customLogo', value: ev.target.result });
       };
       reader.readAsDataURL(file);
     }

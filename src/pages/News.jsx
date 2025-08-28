@@ -1,19 +1,12 @@
 
+import { supabase } from '../../supabase/client';
+
 // Composant News : affichage placeholder pour la section news
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabase/client';
 
 // Composant News : permet de poster des actualités (comme Formation)
 export default function News({ isAdmin = false }) {
-  const [posts, setPosts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('refereesNewsPosts');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      localStorage.removeItem('refereesNewsPosts');
-      return [];
-    }
-  });
+  const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [link, setLink] = useState('');
@@ -27,9 +20,7 @@ export default function News({ isAdmin = false }) {
   const [editImage, setEditImage] = useState('');
   const [editError, setEditError] = useState('');
 
-  useEffect(() => {
-    localStorage.setItem('refereesNewsPosts', JSON.stringify(posts));
-  }, [posts]);
+  useEffect(() => { fetchPosts(); }, []);
 
   const handleAddPost = async (e) => {
     e.preventDefault();
@@ -66,10 +57,14 @@ export default function News({ isAdmin = false }) {
     reader.readAsDataURL(file);
   };
 
-  const handleDeletePost = (idxToDelete) => {
-    if (window.confirm('Supprimer ce post ?')) {
-    fetchPosts();
-      setPosts(posts => posts.filter((_, idx) => idx !== idxToDelete));
+  const handleDeletePost = async (idxToDelete) => {
+    if (!window.confirm('Supprimer ce post ?')) return;
+    const post = posts[idxToDelete];
+    if (post?.id) {
+      await supabase.from('news').delete().eq('id', post.id);
+      fetchPosts();
+    } else {
+      setPosts(ps => ps.filter((_, idx) => idx !== idxToDelete));
     }
   };
 
@@ -82,8 +77,14 @@ export default function News({ isAdmin = false }) {
     setEditError('');
   };
 
-  const handleSaveEdit = (idx) => {
-    setPosts(posts => posts.map((post, i) => i === idx ? { title: editTitle, text: editText, link: editLink, image: editImage } : post));
+  const handleSaveEdit = async (idx) => {
+    const post = posts[idx];
+    if (post?.id) {
+      await supabase.from('news').update({ title: editTitle, text: editText, link: editLink, image: editImage }).eq('id', post.id);
+      await fetchPosts();
+    } else {
+      setPosts(ps => ps.map((p, i) => i === idx ? { ...p, title: editTitle, text: editText, link: editLink, image: editImage } : p));
+    }
     setEditIdx(null);
     setEditTitle('');
     setEditText('');

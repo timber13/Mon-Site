@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 // Fiche : composant d'affichage de la fiche de match avec export PDF
 import React, { useRef, useEffect, useContext } from 'react';
 import html2pdf from 'html2pdf.js';

@@ -1,5 +1,4 @@
-
-
+import { supabase } from '../../supabase/client';
 import React, { useState, useContext } from 'react';
 import { ExcelContext } from '../contexts/ExcelContext';
 import { ResultatsContext } from '../contexts/ResultatsContext';
@@ -170,10 +169,8 @@ export default function ResultatsRegionalEast({ isAdmin, tablesEast, setTablesEa
                   onClick={() => {
                     const updated = tablesEast.filter((_, i2) => i2 !== idx);
                     setTablesEast(updated);
-                    // Merge all divisions for global context
-                    const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
-                    const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
-                    setTables([...nationals, ...west, ...updated]);
+                    // Merge all divisions for global context using available state
+                    setTables([...updated]);
                   }}
                 >🗑 Delete</button>
               )}

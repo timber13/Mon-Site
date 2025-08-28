@@ -1,14 +1,18 @@
 
+import { supabase } from '../../supabase/client';
+
 import React, { useState, useRef, useContext, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AdminContext } from '../contexts/AdminContext';
-import { supabase } from '../../supabase/client';
 
 export default function Club() {
   const { t } = useTranslation();
   const isAdmin = useContext(AdminContext);
   const [showModal, setShowModal] = useState(false);
   const [clubs, setClubs] = useState([]);
+  const [nationalsResults, setNationalsResults] = useState([]);
+  const [westResults, setWestResults] = useState([]);
+  const [eastResults, setEastResults] = useState([]);
 
   const [clubName, setClubName] = useState('');
   const [clubCity, setClubCity] = useState('');
@@ -23,12 +27,23 @@ export default function Club() {
 
   // Effet pour changer la couleur de la barre du menu selon le club sélectionné
   useEffect(() => {
-    fetchClubs();
+  fetchClubs();
+  fetchAllResults();
   }, []);
 
   async function fetchClubs() {
     const { data } = await supabase.from('clubs').select('*').order('created_at', { ascending: false });
     setClubs(data || []);
+  }
+  async function fetchAllResults() {
+    const [n, w, e] = await Promise.all([
+      supabase.from('resultats_nationals').select('*').order('created_at', { ascending: false }),
+      supabase.from('resultats_regional_west').select('*').order('created_at', { ascending: false }),
+      supabase.from('resultats_regional_east').select('*').order('created_at', { ascending: false }),
+    ]);
+    setNationalsResults(n.data || []);
+    setWestResults(w.data || []);
+    setEastResults(e.data || []);
   }
   useEffect(() => {
     const menuBar = document.querySelector('.menu-bar');
@@ -126,15 +141,23 @@ export default function Club() {
     }
   };
 
-  const handleEditSave = () => {
-    const updatedClubs = clubs.map(club =>
-      club === selectedClub
-        ? { ...club, name: editName, city: editCity, image: editImage, description: editDescription, link: editLink, color1: editColor1, color2: editColor2, titles: editTitles.split(',').map(y => y.trim()).filter(y => y) }
-        : club
-    );
-    setClubs(updatedClubs);
-    localStorage.setItem('clubs', JSON.stringify(updatedClubs));
-    setSelectedClub({ ...selectedClub, name: editName, city: editCity, image: editImage, description: editDescription, link: editLink, color1: editColor1, color2: editColor2, titles: editTitles.split(',').map(y => y.trim()).filter(y => y) });
+  const handleEditSave = async () => {
+    if (!selectedClub) return;
+    const payload = {
+      name: editName,
+      city: editCity,
+      image: editImage,
+      description: editDescription,
+      link: editLink,
+      color1: editColor1,
+      color2: editColor2,
+      titles: editTitles.split(',').map(y => y.trim()).filter(y => y),
+    };
+    await supabase.from('clubs').update(payload).eq('id', selectedClub.id);
+    await fetchClubs();
+    // Reselect updated club
+    const updated = (clubs || []).find(c => c.id === selectedClub.id);
+    setSelectedClub(updated ? { ...updated } : null);
     setEditModal(false);
   };
 
@@ -142,15 +165,13 @@ export default function Club() {
   const clubMatchs = useMemo(() => {
     if (!selectedClub) return [];
     const allResults = [];
-    const nationals = JSON.parse(localStorage.getItem('resultatsData_nationals') || '[]');
-    const west = JSON.parse(localStorage.getItem('resultatsData_regionalWest') || '[]');
-    const east = JSON.parse(localStorage.getItem('resultatsData_regionalEast') || '[]');
-    [
-      { label: 'Nationals', data: nationals },
-      { label: 'Regional West', data: west },
-      { label: 'Regional East', data: east },
-    ].forEach(({ label, data }) => {
-      data.forEach(({ title, data: matches }) => {
+    const groups = [
+      { label: 'Nationals', rows: nationalsResults },
+      { label: 'Regional West', rows: westResults },
+      { label: 'Regional East', rows: eastResults },
+    ];
+    groups.forEach(({ label, rows }) => {
+      (rows || []).forEach(({ title, data: matches }) => {
         matches.forEach((match) => {
           if (
             match.team_1 === selectedClub.name ||
@@ -166,7 +187,7 @@ export default function Club() {
       });
     });
     return allResults;
-  }, [selectedClub]);
+  }, [selectedClub, nationalsResults, westResults, eastResults]);
 
   if (selectedClub) {
     return (

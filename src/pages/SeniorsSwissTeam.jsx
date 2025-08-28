@@ -34,8 +34,8 @@ export default function SeniorsSwissTeam({ isAdmin, fontFamily }) {
     { label: 'Comic Sans', value: 'Comic Sans MS, cursive, sans-serif' },
   ];
   const sizeOptions = [11, 13, 15, 18, 22, 28];
-  const [localFont, setLocalFont] = useState(() => localStorage.getItem('seniorsFontFamily') || fontOptions[0].value);
-  const [localSize, setLocalSize] = useState(() => Number(localStorage.getItem('seniorsFontSize')) || 11);
+  const [localFont, setLocalFont] = useState(fontOptions[0].value);
+  const [localSize, setLocalSize] = useState(11);
   const handleFontChange = (e) => {
   setLocalFont(e.target.value);
   supabase.from('seniors_swiss_team').upsert({ id: 1, font: e.target.value });
@@ -86,8 +86,15 @@ export default function SeniorsSwissTeam({ isAdmin, fontFamily }) {
         {isAdmin && (
           <>
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} style={{ marginBottom: 8 }} />
-        {image && <button onClick={() => { setImage(null); localStorage.removeItem('seniorsSwissTeamImage'); }} style={{ fontFamily: localFont, background: '#888', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Remove</button>}
-  {image && <button onClick={async () => { setImage(null); await supabase.from('seniors_swiss_team').upsert({ id: 1, image: null }); }} style={{ fontFamily: localFont, background: '#888', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>Remove</button>}
+            {image && (
+              <button
+                onClick={async () => {
+                  setImage(null);
+                  await supabase.from('seniors_swiss_team').upsert({ id: 1, image: null });
+                }}
+                style={{ fontFamily: localFont, background: '#888', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 16px', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}
+              >Remove</button>
+            )}
           </>
         )}
       </div>

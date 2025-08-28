@@ -1,23 +1,20 @@
+import { supabase } from '../../supabase/client';
 
 // Composant RefereesCoaches : affichage placeholder pour la section referees-coaches
 import React from 'react';
 
 export default function RefereesCoaches({ isAdmin = false }) {
-  const [people, setPeople] = React.useState(() => {
-    try {
-      const saved = localStorage.getItem('refereesCoaches');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      localStorage.removeItem('refereesCoaches');
-      return [];
-    }
-  });
+  const [people, setPeople] = React.useState([]);
   const [form, setForm] = React.useState({ nom: '', prenom: '', type: '', photo: '' });
   const [preview, setPreview] = React.useState('');
 
   React.useEffect(() => {
-    localStorage.setItem('refereesCoaches', JSON.stringify(people));
-  }, [people]);
+    const fetchPeople = async () => {
+      const { data } = await supabase.from('referees_coaches').select('*').order('created_at', { ascending: false });
+      setPeople(data || []);
+    };
+    fetchPeople();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -33,12 +30,14 @@ export default function RefereesCoaches({ isAdmin = false }) {
     }
   };
 
-  const handleAdd = (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
     if (!form.nom || !form.prenom || !form.type || !form.photo) return;
-    setPeople([...people, form]);
+    await supabase.from('referees_coaches').insert([{ nom: form.nom, prenom: form.prenom, type: form.type, photo: form.photo }]);
     setForm({ nom: '', prenom: '', type: '', photo: '' });
     setPreview('');
+    const { data } = await supabase.from('referees_coaches').select('*').order('created_at', { ascending: false });
+    setPeople(data || []);
   };
 
   const style = {
@@ -74,9 +73,18 @@ export default function RefereesCoaches({ isAdmin = false }) {
               {isAdmin && (
                 <button
                   onClick={() => {
-                    if(window.confirm('Supprimer ce profil ?')) {
-                      setPeople(people.filter((_, i) => i !== idx));
-                    }
+                    (async () => {
+                      if(window.confirm('Supprimer ce profil ?')) {
+                        const item = people[idx];
+                        if (item?.id) {
+                          await supabase.from('referees_coaches').delete().eq('id', item.id);
+                          const { data } = await supabase.from('referees_coaches').select('*').order('created_at', { ascending: false });
+                          setPeople(data || []);
+                        } else {
+                          setPeople(people.filter((_, i) => i !== idx));
+                        }
+                      }
+                    })();
                   }}
                   style={{ position: 'absolute', top: 10, right: 10, background: '#c00', color: 'white', border: 'none', borderRadius: '50%', width: 32, height: 32, fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #c0020a22', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   title="Supprimer"

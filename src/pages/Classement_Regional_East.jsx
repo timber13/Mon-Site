@@ -1,4 +1,6 @@
 
+import { supabase } from '../../supabase/client';
+
 import React, { useState } from "react";
 
 // ClassementRegionalEast is now a pure component that receives tablesEast as a prop
