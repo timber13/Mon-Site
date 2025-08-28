@@ -1,11 +1,8 @@
-
 import { supabase } from '../../supabase/client';
-
 import React, { useState, useEffect } from 'react';
 import ClassementNationals from './Classement_Nationals';
 import ClassementRegionalWest from './Classement_Regional_West';
 import ClassementRegionalEast from './Classement_Regional_East';
-import { supabase } from '../../supabase/client';
 
 function getAllPosts() {
   // Cette fonction n'est plus utilisée, migration Supabase ci-dessous
