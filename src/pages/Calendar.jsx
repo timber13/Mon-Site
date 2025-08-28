@@ -1,7 +1,5 @@
-
 import { supabase } from '../../supabase/client';
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../supabase/client';
 import NextEventsColumn from '../components/NextEventsColumn';
 import { AddEventModal, EditEventForm } from '../components/EventModals';
 
